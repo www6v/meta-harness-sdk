@@ -1,5 +1,6 @@
 # Byte-compiled / cache
 __pycache__/
+oma_sdk/api/__pycache__/
 *.py[cod]
 *$py.class
 
