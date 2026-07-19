@@ -60,6 +60,14 @@ PER_Q_TIMEOUT = float(os.getenv("GAIA_PER_Q_TIMEOUT", "300"))  # seconds
 MAX_TOOL_CALLS = int(os.getenv("GAIA_MAX_TOOL_CALLS", "30"))   # loop guard
 MAX_CONCURRENCY = int(os.getenv("GAIA_CONCURRENCY", "1"))
 
+# URL blacklist to block access to answer datasets
+URL_BLACKLIST = [
+    "huggingface.co/datasets/gaia-benchmark",
+    "huggingface.co/datasets/Kevin355/Who_and_When",
+    "github.com/gaia-benchmark",
+    "github.com/xlang-ai/GAIA",
+]
+
 
 GAIA_SYSTEM_PROMPT = """\
 You are a precise QA assistant answering benchmark questions.
@@ -96,6 +104,7 @@ If you cannot determine the answer, output: ANSWER: UNKNOWN
 3. Be concise in your reasoning, but ALWAYS output ANSWER: at the end.
 4. If the same tool call fails three times in a row, stop retrying and output:
    ANSWER: ERROR - <brief description of what failed>
+5. DO NOT access benchmark dataset answer keys (e.g., huggingface.co/datasets/gaia-benchmark, github.com/gaia-benchmark). Solve the problem using legitimate research.
 
 ## Answer Completeness
 
@@ -141,6 +150,26 @@ def _tool_call_fingerprint(call: dict) -> str:
     return f"{name}|{hashlib.md5(inp_key.encode('utf-8')).hexdigest()[:12]}"
 
 
+def _is_url_blacklisted(url: str) -> str | None:
+    """Check if URL matches any blacklisted pattern. Returns matching pattern or None."""
+    url_lower = url.lower()
+    for pattern in URL_BLACKLIST:
+        if pattern.lower() in url_lower:
+            return pattern
+    return None
+
+
+async def _send_interrupt(client: OMAClient, session_id: str) -> None:
+    """Send user.interrupt event to stop the agent."""
+    try:
+        await client.events.send(
+            session_id,
+            events=[{"type": "user.interrupt"}],
+        )
+    except Exception as e:
+        print(f"Warning: Failed to send interrupt: {type(e).__name__}: {e!r}")
+
+
 # ---------------------------------------------------------------------------
 # SDK client and session management
 # ---------------------------------------------------------------------------
@@ -176,7 +205,7 @@ async def create_session(
         resources.append({
             "type": "file",
             "file_id": file_rec["id"],
-            "mount_path": f"/mnt/session/input/{file_path.name}",
+            "mount_path": f"/mnt/session/uploads/{file_path.name}",
         })
 
     # Create session via HTTP API
@@ -201,7 +230,7 @@ async def create_session(
 
     # Send question
     if file_path and file_path.exists():
-        text = f"Attached file: /mnt/session/input/{file_path.name}\n\nQuestion: {question}"
+        text = f"Attached file: /mnt/session/uploads/{file_path.name}\n\nQuestion: {question}"
     else:
         text = question
 
@@ -259,24 +288,28 @@ async def stream_events(client: OMAClient, session_id: str, qr: QResult) -> None
     t0 = time.time()
     assistant_texts: list[str] = []
     qr.tool_calls = []
-    
+
     # Loop detector
     last_tool_key: str | None = None
     consecutive_failures = 0
     LOOP_DETECTION_WINDOW = int(os.getenv("GAIA_LOOP_WINDOW", "3"))
-    
+    should_stop = False
+
     def on_event(evt: dict[str, Any]) -> None:
         """Process each event and update qr."""
-        nonlocal last_tool_key, consecutive_failures
-        
+        nonlocal last_tool_key, consecutive_failures, should_stop
+
+        if should_stop:
+            return
+
         qr.n_events += 1
         etype = event_type(evt)
-        
+
         if etype == "agent.message":
             text = message_text(evt)
             if text:
                 assistant_texts.append(text)
-        
+
         elif etype == "agent.tool_use":
             payload = evt.get("data", evt)
             call = {
@@ -287,18 +320,34 @@ async def stream_events(client: OMAClient, session_id: str, qr: QResult) -> None
             }
             qr.tool_calls.append(call)
             qr.n_tool_calls += 1
-            
-            # Check for loop
+
+            # Check for URL blacklist violation
+            if call["name"] == "web_fetch":
+                url = call["input"].get("url", "")
+                matched_pattern = _is_url_blacklisted(url)
+                if matched_pattern:
+                    qr.status = "blacklisted"
+                    qr.defect_tags.append("blacklisted_url")
+                    qr.error = f"Attempted to access blacklisted URL pattern: {matched_pattern}"
+                    should_stop = True
+                    asyncio.create_task(_send_interrupt(client, session_id))
+                    return
+
+            # Check for tool call limit exceeded
             if qr.n_tool_calls > MAX_TOOL_CALLS:
                 qr.status = "loop"
                 qr.defect_tags.append("tool_loop")
-        
+                qr.error = f"Exceeded maximum tool calls ({MAX_TOOL_CALLS})"
+                should_stop = True
+                asyncio.create_task(_send_interrupt(client, session_id))
+                return
+
         elif etype == "agent.tool_result":
             payload = evt.get("data", evt)
             content = payload.get("content", [])
             text = " ".join(c.get("text", "") for c in content if c.get("type") == "text")
             is_error = payload.get("is_error", False)
-            
+
             # Match to most recent tool_use
             if qr.tool_calls:
                 qr.tool_calls[-1]["output_head"] = text[:300]
@@ -308,7 +357,7 @@ async def stream_events(client: OMAClient, session_id: str, qr: QResult) -> None
                     tag = f"tool_{tool}_error"
                     if tag not in qr.defect_tags:
                         qr.defect_tags.append(tag)
-                    
+
                     # Loop detection
                     key = _tool_call_fingerprint(qr.tool_calls[-1])
                     if key == last_tool_key:
@@ -316,30 +365,49 @@ async def stream_events(client: OMAClient, session_id: str, qr: QResult) -> None
                     else:
                         last_tool_key = key
                         consecutive_failures = 1
-                    
+
                     if consecutive_failures >= LOOP_DETECTION_WINDOW:
                         qr.status = "loop"
                         qr.defect_tags.append("tool_loop")
+                        qr.error = f"Detected {consecutive_failures} consecutive failures of same tool call"
+                        should_stop = True
+                        asyncio.create_task(_send_interrupt(client, session_id))
+                        return
                 else:
                     last_tool_key = None
                     consecutive_failures = 0
     
-    # Use SDK's stream_until_end_turn
+    # Use SDK's stream_until_end_turn with explicit timeout wrapper
     config = StreamConfig(
         timeout_sec=PER_Q_TIMEOUT,
         stream_read_timeout=PER_Q_TIMEOUT,
     )
-    
+
     try:
-        await stream_until_end_turn(
-            client,
-            session_id,
-            config=config,
-            on_event=on_event,
+        # Explicit timeout wrapper to enforce hard limit
+        await asyncio.wait_for(
+            stream_until_end_turn(
+                client,
+                session_id,
+                config=config,
+                on_event=on_event,
+            ),
+            timeout=PER_Q_TIMEOUT,
         )
         # If no error and we have a prediction, mark as ok
         if qr.status == "pending":
             qr.status = "ok"
+    except asyncio.TimeoutError:
+        qr.status = "timeout"
+        qr.defect_tags.append("timeout")
+        # Send interrupt to stop the agent
+        try:
+            await client.events.send(
+                session_id,
+                events=[{"type": "user.interrupt"}],
+            )
+        except Exception:
+            pass
     except TimeoutError:
         qr.status = "timeout"
         qr.defect_tags.append("timeout")
