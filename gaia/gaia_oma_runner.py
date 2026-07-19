@@ -371,6 +371,9 @@ async def stream_events(client: OMAClient, session_id: str, qr: QResult) -> None
                 m = re.search(pattern, full_text)
                 if m:
                     candidate = m.group(1).strip()
+                    # Clean up common prefixes and punctuation
+                    candidate = re.sub(r'^(?:ANSWER|ANS|WER|AN)\s*:\s*', '', candidate, flags=re.IGNORECASE)
+                    candidate = candidate.lstrip(':').strip()
                     # Only accept if it's reasonably short (likely an answer)
                     if len(candidate) < 100:
                         qr.prediction = candidate
