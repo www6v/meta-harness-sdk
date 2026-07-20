@@ -28,9 +28,13 @@ import anthropic
 import httpx
 import pytest
 
-# Auto-load oma-platform/.env (two levels up from sdk/tests/)
-_dotenv = Path(__file__).parents[2] / ".env"
-if _dotenv.exists():
+# Auto-load .env from repo root or oma-platform/ (do not override exported vars).
+for _dotenv in (
+    Path(__file__).parents[2] / ".env",
+    Path(__file__).parents[2] / "oma-platform" / ".env",
+):
+    if not _dotenv.exists():
+        continue
     for _line in _dotenv.read_text().splitlines():
         _line = _line.strip()
         if not _line or _line.startswith("#") or "=" not in _line:
