@@ -38,6 +38,7 @@ from .resources.model_cards import ModelCardsResource
 from .resources.models import ModelsResource
 from .resources.runtimes import RuntimesResource
 from .resources.sessions import SessionEventsResource
+from .event_flatten import flatten_session_event, install_event_flattening
 
 from .subagent import (
     build_multiagent,
@@ -67,6 +68,7 @@ __all__ = [
     "event_payload",
     "event_type",
     "events_of_type",
+    "flatten_session_event",
     "message_text",
     "print_stream_event",
     "stop_reason_event_ids",
@@ -97,6 +99,17 @@ class OMAClient:
             api_key=api_key,
             base_url=base_url,
             default_headers=anthropic_headers,
+        )
+        # oma-platform nests event fields under ``data``; flatten so
+        # ``client.beta.sessions.events`` matches Anthropic managed-agents
+        # (ev.content / ev.stop_reason / ev.name work for Streamlit UIs).
+        # Also replaces ``.stream`` with an httpx SSE reader — Anthropic's
+        # Stream drops frames that lack an SSE ``event:`` field.
+        install_event_flattening(
+            self._anthropic,
+            base_url=base_url,
+            api_key=api_key,
+            tenant_id=tenant_id,
         )
         self._http = httpx.AsyncClient(
             base_url=base_url,
