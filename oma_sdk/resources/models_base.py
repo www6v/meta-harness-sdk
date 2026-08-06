@@ -123,3 +123,24 @@ def wrap_page(payload: dict[str, Any]) -> SyncPage:
         last_id=payload.get("last_id"),
         next_page=payload.get("next_page"),
     )
+
+
+def wrap_response(response: Any) -> APIObject:
+    """Parse JSON body and attach ``_request_id`` from response headers."""
+    from .._exceptions import raise_for_status
+    from .._http import request_id_from
+
+    raise_for_status(response)
+    obj = wrap(response.json() if response.content else {})
+    rid = request_id_from(response)
+    if rid is not None:
+        obj._request_id = rid
+    return obj
+
+
+def wrap_page_response(response: Any) -> SyncPage:
+    from .._exceptions import raise_for_status
+
+    raise_for_status(response)
+    return wrap_page(response.json() if response.content else {"data": []})
+

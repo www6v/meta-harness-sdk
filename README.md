@@ -10,9 +10,9 @@ Use this package to call the platform HTTP API from Python: create agents/sessio
 
 ## Features
 
-- **`OMAClient`** — single entrypoint over Anthropic SDK (`base_url`) + `httpx`
-- **Managed-agents resources** — agents, sessions, environments, memory stores, vaults, skills
-- **OMA-only resources** — dreams, evals, runtimes, integrations, model cards, cost report, me, api_keys, files, models, session events
+- **`OMAClient` / `AsyncOMAClient`** — sync and async entrypoints aligned with Anthropic / AsyncAnthropic DX
+- **Managed-agents resources** — agents, sessions, environments, memory stores, vaults (via Anthropic SDK `base_url`)
+- **httpx resources** — skills, files, dreams, evals, runtimes, integrations, model cards, cost report, me, api_keys, models, session events
 - **Cookbook helpers** — `stream_until_end_turn`, `stream_hitl_until_end_turn`, `wait_for_idle_status`, …
 - **Examples 1–10** — Managed Agents Cookbook parity under `example/`
 - **E2E tests** — pytest suite against a live platform (`tests/`)
@@ -48,27 +48,47 @@ agent = client.agents.create(
 session = client.sessions.create(agent=agent.id)
 ```
 
-Tenant header (optional):
+Async:
 
 ```python
-client = OMAClient(tenant_id="your-tenant-id")
+from oma_sdk import AsyncOMAClient
+
+async with AsyncOMAClient() as client:
+    agent = await client.agents.create(
+        name="hello",
+        model={"id": "claude-sonnet-4-6"},
+    )
+```
+
+Tenant header / constructor options (optional):
+
+```python
+client = OMAClient(
+    api_key="dev-key",
+    tenant_id="your-tenant-id",
+    timeout=120.0,
+    max_retries=2,
+)
+client.with_options(timeout=30.0).me.get()
 ```
 
 ## Environment variables
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `OMA_API_KEY` | yes | — | Platform API key (`x-api-key`) |
+| `OMA_API_KEY` | yes (unless `api_key=` passed) | — | Platform API key (`x-api-key`) |
 | `OMA_PLATFORM_URL` | no | `http://localhost:8787` | Platform base URL |
+| `OMA_LOG` | no | — | `debug` or `info` to enable SDK logging |
 
 ## Resource map
 
-| Kind | Access | Resources |
-|------|--------|-----------|
-| Managed-agents (Anthropic SDK) | `client.agents`, `client.sessions`, … | agents, sessions, environments, memory_stores, vaults, skills |
-| OMA-only (`httpx`) | `client.dreams`, `client.evals`, … | dreams, evals, runtimes, integrations, model_cards, cost_report, me, api_keys, files, models, events |
+| Kind | Access | Resources | Sync / async |
+|------|--------|-----------|--------------|
+| Managed-agents (Anthropic SDK) | `client.agents`, `client.sessions`, … | agents, sessions, environments, memory_stores, vaults | sync on `OMAClient`; await on `AsyncOMAClient` |
+| Skills / files (httpx, CMA-shaped) | `client.skills`, `client.files` | skills (+ versions), files | sync primary; `*_async` aliases on `OMAClient` |
+| OMA-only (httpx) | `client.dreams`, `client.evals`, … | dreams, evals, runtimes, integrations, model_cards, cost_report, me, api_keys, models, events | sync + async on both clients |
 
-Session event helpers: `client.events` (`send` / `list` / `stream`). Cookbook streaming lives in `oma_sdk.cookbook`.
+Session event helpers: `client.events` (`send` / `list` / `stream`) — OMA convenience layer; prefer `client.sessions.events` for Anthropic-shaped streaming. Cookbook streaming lives in `oma_sdk.cookbook`.
 
 ## Examples
 
@@ -93,7 +113,7 @@ uv run pytest tests/ -x
 
 ```
 oma-sdk/
-├── oma_sdk/          # package: OMAClient, resources, cookbook, subagent helpers
+├── oma_sdk/          # package: OMAClient, AsyncOMAClient, resources, cookbook
 ├── example/          # cookbook parity examples 1–10
 ├── tests/            # E2E pytest suite
 ├── gaia/             # GAIA evaluation runner (optional)

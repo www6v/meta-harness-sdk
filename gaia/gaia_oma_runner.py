@@ -275,7 +275,7 @@ class QResult:
 
 async def ensure_agent(client: OMAClient) -> None:
     """Quick liveness + config check."""
-    me = await client.me.get()
+    me = await client.me.get_async()
     print(f"✓ oma-platform: tenant={me['tenant']['name']}")
     # agents is from anthropic SDK (sync)
     agent = client.agents.retrieve(AGENT_ID)

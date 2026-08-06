@@ -5,10 +5,9 @@ from __future__ import annotations
 import io
 import os
 
-import httpx
 import pytest
 
-from oma_sdk import OMAClient
+from oma_sdk import OMAClient, NotFoundError
 from oma_sdk.examples import FileExamples
 
 
@@ -173,5 +172,5 @@ def test_upload_json_requires_filename(oma_client: OMAClient):
 
 
 def test_retrieve_unknown_file_returns_404(oma_client: OMAClient):
-    with pytest.raises(httpx.HTTPStatusError):
+    with pytest.raises(NotFoundError):
         oma_client.files.retrieve("file_does_not_exist")

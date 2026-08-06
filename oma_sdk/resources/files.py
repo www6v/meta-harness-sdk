@@ -21,7 +21,8 @@ from typing import IO, Any
 
 import httpx
 
-from .models_base import APIObject, SyncPage, wrap, wrap_page
+from .._exceptions import raise_for_status
+from .models_base import APIObject, SyncPage, wrap_page_response, wrap_response
 
 
 class FilesResource:
@@ -62,13 +63,11 @@ class FilesResource:
             **extra_params,
         )
         r = self._require_sync().get("/v1/files", params=params)
-        r.raise_for_status()
-        return wrap_page(r.json())
+        return wrap_page_response(r)
 
     def retrieve(self, file_id: str) -> APIObject:
         r = self._require_sync().get(f"/v1/files/{file_id}")
-        r.raise_for_status()
-        return wrap(r.json())
+        return wrap_response(r)
 
     def retrieve_metadata(self, file_id: str) -> APIObject:
         """CMA alias for :meth:`retrieve`."""
@@ -89,28 +88,26 @@ class FilesResource:
         mode = _upload_mode(file=file, content=content, filename=filename)
         sync = self._require_sync()
         if mode == "multipart":
-            body = _post_multipart_sync(
+            return _post_multipart_sync(
                 sync,
                 file=file,  # type: ignore[arg-type]
                 media_type=media_type,
                 scope_id=scope_id,
                 downloadable=downloadable,
             )
-        else:
-            body = _post_json_sync(
-                sync,
-                filename=filename,  # type: ignore[arg-type]
-                content=content,  # type: ignore[arg-type]
-                media_type=media_type,
-                encoding=encoding,
-                scope_id=scope_id,
-                downloadable=downloadable,
-            )
-        return wrap(body)
+        return _post_json_sync(
+            sync,
+            filename=filename,  # type: ignore[arg-type]
+            content=content,  # type: ignore[arg-type]
+            media_type=media_type,
+            encoding=encoding,
+            scope_id=scope_id,
+            downloadable=downloadable,
+        )
 
     def download(self, file_id: str) -> bytes:
         r = self._require_sync().get(f"/v1/files/{file_id}/content")
-        r.raise_for_status()
+        raise_for_status(r)
         return r.content
 
     def content(self, file_id: str) -> bytes:
@@ -119,8 +116,7 @@ class FilesResource:
 
     def delete(self, file_id: str) -> APIObject:
         r = self._require_sync().delete(f"/v1/files/{file_id}")
-        r.raise_for_status()
-        return wrap(r.json())
+        return wrap_response(r)
 
     # -- async (cookbook) ---------------------------------------------------
 
@@ -143,13 +139,11 @@ class FilesResource:
             **extra_params,
         )
         r = await self._http.get("/v1/files", params=params)
-        r.raise_for_status()
-        return wrap_page(r.json())
+        return wrap_page_response(r)
 
     async def retrieve_async(self, file_id: str) -> APIObject:
         r = await self._http.get(f"/v1/files/{file_id}")
-        r.raise_for_status()
-        return wrap(r.json())
+        return wrap_response(r)
 
     async def upload_async(
         self,
@@ -171,8 +165,7 @@ class FilesResource:
                 downloadable=downloadable,
             )
             r = await self._http.post("/v1/files", files=files, data=data)
-            r.raise_for_status()
-            return wrap(r.json())
+            return wrap_response(r)
         body = _json_body(
             filename=filename,  # type: ignore[arg-type]
             content=content,  # type: ignore[arg-type]
@@ -182,12 +175,11 @@ class FilesResource:
             downloadable=downloadable,
         )
         r = await self._http.post("/v1/files", json=body)
-        r.raise_for_status()
-        return wrap(r.json())
+        return wrap_response(r)
 
     async def download_async(self, file_id: str) -> bytes:
         r = await self._http.get(f"/v1/files/{file_id}/content")
-        r.raise_for_status()
+        raise_for_status(r)
         return r.content
 
     async def content_async(self, file_id: str) -> bytes:
@@ -195,8 +187,7 @@ class FilesResource:
 
     async def delete_async(self, file_id: str) -> APIObject:
         r = await self._http.delete(f"/v1/files/{file_id}")
-        r.raise_for_status()
-        return wrap(r.json())
+        return wrap_response(r)
 
 
 # ---------------------------------------------------------------------------
@@ -307,7 +298,7 @@ def _post_multipart_sync(
     media_type: str | None,
     scope_id: str | None,
     downloadable: bool,
-) -> dict:
+) -> APIObject:
     files, data = _multipart_body(
         file=file,
         media_type=media_type,
@@ -315,8 +306,7 @@ def _post_multipart_sync(
         downloadable=downloadable,
     )
     r = sync.post("/v1/files", files=files, data=data)
-    r.raise_for_status()
-    return r.json()
+    return wrap_response(r)
 
 
 def _post_json_sync(
@@ -328,7 +318,7 @@ def _post_json_sync(
     encoding: str | None,
     scope_id: str | None,
     downloadable: bool,
-) -> dict:
+) -> APIObject:
     body = _json_body(
         filename=filename,
         content=content,
@@ -338,5 +328,4 @@ def _post_json_sync(
         downloadable=downloadable,
     )
     r = sync.post("/v1/files", json=body)
-    r.raise_for_status()
-    return r.json()
+    return wrap_response(r)

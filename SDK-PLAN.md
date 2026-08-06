@@ -1,6 +1,6 @@
 # OMA Platform Python SDK — Engineering Review & Implementation Plan
 
-> **Status (2026-07-04):** SDK implemented in this directory. Managed-agents resources route through `anthropic>=0.111.0` with `base_url`; OMA-only resources use `httpx` wrappers. E2E tests cover agents, sessions, environments, memory_stores, vaults, skills, files, misc, subagents. Wire-compat gaps **T15–T19** closed. **Cookbook parity (data analyst):** P0 + E1 closed. **Cookbook parity (iterate):** IF1–IF4 + MT1 closed. **Cookbook parity (gate HITL):** GT1–GT5 closed. **Cookbook parity (outcome grader):** OG1–OG3 closed — `example/example4/outcome_grader.py`.
+> **Status (2026-08-06):** SDK client DX aligned with Anthropic Python SDK: `OMAClient` + `AsyncOMAClient`, `api_key`/`timeout`/`max_retries`/`with_options`, typed httpx errors, sync/async resource symmetry. Managed-agents resources route through `anthropic>=0.111.0` with `base_url`; OMA-only resources use `httpx` wrappers. E2E tests cover agents, sessions, environments, memory_stores, vaults, skills, files, misc, subagents. Wire-compat gaps **T15–T19** closed. **Cookbook parity (data analyst):** P0 + E1 closed. **Cookbook parity (iterate):** IF1–IF4 + MT1 closed. **Cookbook parity (gate HITL):** GT1–GT5 closed. **Cookbook parity (outcome grader):** OG1–OG3 closed — `example/example4/outcome_grader.py`.
 
 ---
 
@@ -312,7 +312,7 @@ These resources exist in **both** anthropic SDK and oma-platform, but OMA SDK de
 | `client.environments` | anthropic SDK | `beta.environments` | In-scope parity ✅; `work.*` out of scope |
 | `client.memory_stores` | anthropic SDK | `beta.memory_stores` | Full parity |
 | `client.vaults` | anthropic SDK | `beta.vaults` | Full parity |
-| `client.skills` | anthropic SDK | `beta.skills` | Full in-scope parity (T18 download) |
+| `client.skills` | httpx | `/v1/skills` | CMA-shaped sync/async; zip → `/upload` (not `beta.skills`) |
 | `client.files` | httpx | `/v1/files` | Dual upload modes |
 | `client.models` | httpx | `/v1/models/list` | OMA-specific catalog proxy |
 | `client.dreams` | httpx | `/v1/dreams` | Requires `anthropic-beta` dreaming header |
@@ -323,6 +323,24 @@ These resources exist in **both** anthropic SDK and oma-platform, but OMA SDK de
 | `client.cost_report` | httpx | `/v1/cost_report` | |
 | `client.me` | httpx | `/v1/me` | |
 | `client.api_keys` | httpx | `/v1/api_keys` | |
+| `client.events` | httpx | `/v1/sessions/{id}/events*` | OMA convenience; prefer `client.sessions.events` |
+
+### 8. Client DX Gap (vs Anthropic Python SDK)
+
+Reference: [platform.claude.com Python SDK](https://platform.claude.com/docs/en/cli-sdks-libraries/sdks/python).
+
+| Capability | Anthropic SDK | oma-sdk target | Status |
+|---|---|---|---|
+| Sync client | `Anthropic` | `OMAClient` | ✅ |
+| Async client | `AsyncAnthropic` | `AsyncOMAClient` | ✅ |
+| `api_key` ctor / env | yes | `api_key` or `OMA_API_KEY` | ✅ |
+| `timeout` / `max_retries` | yes | passed to Anthropic + httpx | ✅ |
+| `with_options(...)` | yes | shallow copy client | ✅ |
+| Typed errors on httpx | Anthropic exceptions | map via `_exceptions.raise_for_status` | ✅ |
+| `OMA_LOG` | `ANTHROPIC_LOG` | `debug`/`info` | ✅ |
+| `with_raw_response` on httpx resources | yes | deferred | — |
+| Auto cross-page iteration (skills/files) | yes | `SyncPage` single page | partial |
+| `beta.messages` / batches / cloud clients | yes | out of scope | — |
 
 ---
 

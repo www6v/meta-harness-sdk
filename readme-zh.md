@@ -10,9 +10,9 @@
 
 ## 特性
 
-- **`OMAClient`** — 统一入口：Anthropic SDK（自定义 `base_url`）+ `httpx`
-- **Managed-agents 资源** — agents、sessions、environments、memory stores、vaults、skills
-- **OMA 专属资源** — dreams、evals、runtimes、integrations、model cards、cost report、me、api_keys、files、models、session events
+- **`OMAClient` / `AsyncOMAClient`** — 同步/异步双客户端，对齐 Anthropic / AsyncAnthropic DX
+- **Managed-agents 资源** — agents、sessions、environments、memory stores、vaults（经 Anthropic SDK `base_url`）
+- **httpx 资源** — skills、files、dreams、evals、runtimes、integrations、model cards、cost report、me、api_keys、models、session events
 - **Cookbook 辅助函数** — `stream_until_end_turn`、`stream_hitl_until_end_turn`、`wait_for_idle_status` 等
 - **示例 1–10** — Managed Agents Cookbook 对齐，见 `example/`
 - **E2E 测试** — 对真实平台的 pytest 套件（`tests/`）
@@ -48,27 +48,46 @@ agent = client.agents.create(
 session = client.sessions.create(agent=agent.id)
 ```
 
-租户头（可选）：
+异步：
 
 ```python
-client = OMAClient(tenant_id="your-tenant-id")
+from oma_sdk import AsyncOMAClient
+
+async with AsyncOMAClient() as client:
+    agent = await client.agents.create(
+        name="hello",
+        model={"id": "claude-sonnet-4-6"},
+    )
+```
+
+租户头 / 构造参数（可选）：
+
+```python
+client = OMAClient(
+    api_key="dev-key",
+    tenant_id="your-tenant-id",
+    timeout=120.0,
+    max_retries=2,
+)
 ```
 
 ## 环境变量
 
 | 变量 | 必需 | 默认值 | 说明 |
 |------|------|--------|------|
-| `OMA_API_KEY` | 是 | — | 平台 API Key（`x-api-key`） |
+| `OMA_API_KEY` | 是（或传 `api_key=`） | — | 平台 API Key（`x-api-key`） |
 | `OMA_PLATFORM_URL` | 否 | `http://localhost:8787` | 平台 Base URL |
+| `OMA_LOG` | 否 | — | `debug` 或 `info` 打开 SDK 日志 |
 
 ## 资源一览
 
-| 类型 | 访问方式 | 资源 |
-|------|----------|------|
-| Managed-agents（Anthropic SDK） | `client.agents`、`client.sessions`、… | agents、sessions、environments、memory_stores、vaults、skills |
-| OMA 专属（`httpx`） | `client.dreams`、`client.evals`、… | dreams、evals、runtimes、integrations、model_cards、cost_report、me、api_keys、files、models、events |
+| 类型 | 访问方式 | 资源 | 同步 / 异步 |
+|------|----------|------|-------------|
+| Managed-agents（Anthropic SDK） | `client.agents`、`client.sessions`、… | agents、sessions、environments、memory_stores、vaults | `OMAClient` 同步；`AsyncOMAClient` await |
+| Skills / files（httpx，CMA 形状） | `client.skills`、`client.files` | skills（含 versions）、files | 同步为主；`OMAClient` 保留 `*_async` 别名 |
+| OMA 专属（httpx） | `client.dreams`、`client.evals`、… | dreams、evals、runtimes、integrations、model_cards、cost_report、me、api_keys、models、events | 双客户端均提供 sync + async |
 
-Session 事件：`client.events`（`send` / `list` / `stream`）。Cookbook 流式辅助在 `oma_sdk.cookbook`。
+Session 事件：`client.events`（便利层）；推荐主路径 `client.sessions.events`。Cookbook 流式辅助在 `oma_sdk.cookbook`。
 
 ## 示例
 
@@ -93,7 +112,7 @@ uv run pytest tests/ -x
 
 ```
 oma-sdk/
-├── oma_sdk/          # 包：OMAClient、resources、cookbook、subagent 辅助
+├── oma_sdk/          # 包：OMAClient、AsyncOMAClient、resources、cookbook
 ├── example/          # Cookbook 对齐示例 1–10
 ├── tests/            # E2E pytest
 ├── gaia/             # GAIA 评测（可选）
@@ -117,10 +136,10 @@ oma-sdk/
 ```
 
 - **oma-platform** — 服务端、harness、Console、鉴权
-- **oma-sdk** — 该平台的 Python 客户端（本仓库）
+- **oma-sdk** — 面向该平台的 Python 客户端（本仓库）
 
 另见：[`SDK-PLAN.md`](./SDK-PLAN.md)、[`HARNESS_SUPPORT.md`](./HARNESS_SUPPORT.md)。
 
 ## 版本
 
-`oma-sdk` **v0.1.0**（见 `pyproject.toml`）。
+`oma-sdk` **v0.1.0**（`pyproject.toml`）。

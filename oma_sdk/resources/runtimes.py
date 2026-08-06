@@ -1,18 +1,40 @@
 from __future__ import annotations
+
 from typing import Any
+
 import httpx
+
+from .._http import json_or_empty
 
 
 class RuntimesResource:
-    def __init__(self, http: httpx.AsyncClient) -> None:
+    def __init__(
+        self,
+        http: httpx.AsyncClient,
+        sync: httpx.Client | None = None,
+    ) -> None:
         self._http = http
+        self._sync = sync
 
-    async def list(self, **params: Any) -> dict:
+    def _require_sync(self) -> httpx.Client:
+        if self._sync is None:
+            raise RuntimeError(
+                "sync RuntimesResource methods require a sync httpx.Client"
+            )
+        return self._sync
+
+    def list(self, **params: Any) -> dict:
+        r = self._require_sync().get("/v1/runtimes", params=params)
+        return json_or_empty(r)
+
+    def retrieve(self, runtime_id: str) -> dict:
+        r = self._require_sync().get(f"/v1/runtimes/{runtime_id}")
+        return json_or_empty(r)
+
+    async def list_async(self, **params: Any) -> dict:
         r = await self._http.get("/v1/runtimes", params=params)
-        r.raise_for_status()
-        return r.json()
+        return json_or_empty(r)
 
-    async def retrieve(self, runtime_id: str) -> dict:
+    async def retrieve_async(self, runtime_id: str) -> dict:
         r = await self._http.get(f"/v1/runtimes/{runtime_id}")
-        r.raise_for_status()
-        return r.json()
+        return json_or_empty(r)

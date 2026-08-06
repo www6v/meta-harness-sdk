@@ -12,11 +12,14 @@ import asyncio
 import os
 
 import anthropic
-import httpx
 import pytest
 import pytest_asyncio
 
-from oma_sdk import OMAClient
+from oma_sdk import (
+    OMAClient,
+    APIStatusError,
+    BadRequestError,
+)
 from oma_sdk.examples import EventsExamples, SessionExamples
 
 
@@ -304,9 +307,9 @@ async def test_send_empty_events_array_returns_400(
     oma_client: OMAClient, live_session: str
 ):
     """Server rejects an empty events array (400)."""
-    with pytest.raises(httpx.HTTPStatusError) as excinfo:
+    with pytest.raises(BadRequestError) as excinfo:
         await oma_client.events.send(live_session, events=[])
-    assert excinfo.value.response.status_code == 400
+    assert excinfo.value.status_code == 400
 
 
 @pytest.mark.asyncio
@@ -314,12 +317,12 @@ async def test_send_invalid_event_type_returns_400(
     oma_client: OMAClient, live_session: str
 ):
     """Server rejects events with an unknown ``type`` (400)."""
-    with pytest.raises(httpx.HTTPStatusError) as excinfo:
+    with pytest.raises(BadRequestError) as excinfo:
         await oma_client.events.send(
             live_session,
             events=[{"type": "not.a.real.event.type"}],
         )
-    assert excinfo.value.response.status_code == 400
+    assert excinfo.value.status_code == 400
 
 
 @pytest.mark.asyncio
@@ -327,7 +330,7 @@ async def test_list_events_unknown_session_returns_500_or_404(
     oma_client: OMAClient,
 ):
     """Listing events for a non-existent session is an error."""
-    with pytest.raises(httpx.HTTPStatusError):
+    with pytest.raises(APIStatusError):
         await oma_client.events.list("sess_does_not_exist_xyz")
 
 

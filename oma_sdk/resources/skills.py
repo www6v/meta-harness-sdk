@@ -22,7 +22,8 @@ from typing import IO, Any
 
 import httpx
 
-from .models_base import APIObject, SyncPage, wrap, wrap_page
+from .._exceptions import raise_for_status
+from .models_base import APIObject, SyncPage, wrap_page_response, wrap_response
 
 FileTuple = tuple[str, bytes | str | IO[bytes]] | tuple[str, bytes | str | IO[bytes], str]
 
@@ -108,31 +109,27 @@ class SkillVersionsResource:
         if description is not None:
             body["description"] = description
         r = self._sync.post(f"/v1/skills/{skill_id}/versions", json=body)
-        r.raise_for_status()
-        return wrap(r.json())
+        return wrap_response(r)
 
     def list(self, skill_id: str, *, limit: int | None = None) -> SyncPage:
         params: dict[str, Any] = {}
         if limit is not None:
             params["limit"] = limit
         r = self._sync.get(f"/v1/skills/{skill_id}/versions", params=params)
-        r.raise_for_status()
-        return wrap_page(r.json())
+        return wrap_page_response(r)
 
     def retrieve(self, version: str, *, skill_id: str) -> APIObject:
         r = self._sync.get(f"/v1/skills/{skill_id}/versions/{version}")
-        r.raise_for_status()
-        return wrap(r.json())
+        return wrap_response(r)
 
     def delete(self, version: str, *, skill_id: str) -> APIObject:
         r = self._sync.delete(f"/v1/skills/{skill_id}/versions/{version}")
-        r.raise_for_status()
-        return wrap(r.json())
+        return wrap_response(r)
 
     def download(self, version: str, *, skill_id: str) -> bytes:
         """Download version zip (``GET .../versions/{v}/content``)."""
         r = self._sync.get(f"/v1/skills/{skill_id}/versions/{version}/content")
-        r.raise_for_status()
+        raise_for_status(r)
         return r.content
 
     def upload(
@@ -153,8 +150,7 @@ class SkillVersionsResource:
             files={"file": (fname, io.BytesIO(payload), "application/zip")},
             data=data,
         )
-        r.raise_for_status()
-        return wrap(r.json())
+        return wrap_response(r)
 
     # -- async --------------------------------------------------------------
 
@@ -178,16 +174,29 @@ class SkillVersionsResource:
         if description is not None:
             body["description"] = description
         r = await self._http.post(f"/v1/skills/{skill_id}/versions", json=body)
-        r.raise_for_status()
-        return wrap(r.json())
+        return wrap_response(r)
 
     async def list_async(self, skill_id: str, *, limit: int | None = None) -> SyncPage:
         params: dict[str, Any] = {}
         if limit is not None:
             params["limit"] = limit
         r = await self._http.get(f"/v1/skills/{skill_id}/versions", params=params)
-        r.raise_for_status()
-        return wrap_page(r.json())
+        return wrap_page_response(r)
+
+    async def retrieve_async(self, version: str, *, skill_id: str) -> APIObject:
+        r = await self._http.get(f"/v1/skills/{skill_id}/versions/{version}")
+        return wrap_response(r)
+
+    async def delete_async(self, version: str, *, skill_id: str) -> APIObject:
+        r = await self._http.delete(f"/v1/skills/{skill_id}/versions/{version}")
+        return wrap_response(r)
+
+    async def download_async(self, version: str, *, skill_id: str) -> bytes:
+        r = await self._http.get(
+            f"/v1/skills/{skill_id}/versions/{version}/content"
+        )
+        raise_for_status(r)
+        return r.content
 
     async def upload_async(
         self,
@@ -206,8 +215,7 @@ class SkillVersionsResource:
             files={"file": (fname, io.BytesIO(payload), "application/zip")},
             data=data,
         )
-        r.raise_for_status()
-        return wrap(r.json())
+        return wrap_response(r)
 
 
 class SkillsResource:
@@ -245,8 +253,7 @@ class SkillsResource:
         if description is not None:
             body["description"] = description
         r = self._sync.post("/v1/skills", json=body)
-        r.raise_for_status()
-        return wrap(r.json())
+        return wrap_response(r)
 
     def list(
         self,
@@ -260,18 +267,15 @@ class SkillsResource:
         if limit is not None:
             params["limit"] = limit
         r = self._sync.get("/v1/skills", params=params)
-        r.raise_for_status()
-        return wrap_page(r.json())
+        return wrap_page_response(r)
 
     def retrieve(self, skill_id: str) -> APIObject:
         r = self._sync.get(f"/v1/skills/{skill_id}")
-        r.raise_for_status()
-        return wrap(r.json())
+        return wrap_response(r)
 
     def delete(self, skill_id: str) -> APIObject:
         r = self._sync.delete(f"/v1/skills/{skill_id}")
-        r.raise_for_status()
-        return wrap(r.json())
+        return wrap_response(r)
 
     def upload(
         self,
@@ -290,8 +294,7 @@ class SkillsResource:
             files={"file": (fname, io.BytesIO(payload), "application/zip")},
             data=data,
         )
-        r.raise_for_status()
-        return wrap(r.json())
+        return wrap_response(r)
 
     # -- async --------------------------------------------------------------
 
@@ -316,8 +319,7 @@ class SkillsResource:
         if description is not None:
             body["description"] = description
         r = await self._http.post("/v1/skills", json=body)
-        r.raise_for_status()
-        return wrap(r.json())
+        return wrap_response(r)
 
     async def list_async(
         self,
@@ -331,18 +333,15 @@ class SkillsResource:
         if limit is not None:
             params["limit"] = limit
         r = await self._http.get("/v1/skills", params=params)
-        r.raise_for_status()
-        return wrap_page(r.json())
+        return wrap_page_response(r)
 
     async def retrieve_async(self, skill_id: str) -> APIObject:
         r = await self._http.get(f"/v1/skills/{skill_id}")
-        r.raise_for_status()
-        return wrap(r.json())
+        return wrap_response(r)
 
     async def delete_async(self, skill_id: str) -> APIObject:
         r = await self._http.delete(f"/v1/skills/{skill_id}")
-        r.raise_for_status()
-        return wrap(r.json())
+        return wrap_response(r)
 
     async def upload_async(
         self,
@@ -360,5 +359,4 @@ class SkillsResource:
             files={"file": (fname, io.BytesIO(payload), "application/zip")},
             data=data,
         )
-        r.raise_for_status()
-        return wrap(r.json())
+        return wrap_response(r)
