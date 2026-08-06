@@ -174,7 +174,7 @@ async def upload_fixture(
     mime: str,
 ) -> dict:
     payload = path.read_bytes()
-    return await client.files.upload(
+    return client.files.upload(
         file=(path.name, io.BytesIO(payload), mime),
         downloadable=True,
     )

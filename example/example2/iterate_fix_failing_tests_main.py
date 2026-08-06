@@ -170,7 +170,7 @@ async def upload_fixture(
     ``client.beta.files``. Same wire route, different SDK surface (T20).
     """
     payload = path.read_bytes()
-    return await client.files.upload(
+    return client.files.upload(
         file=(path.name, io.BytesIO(payload), mime),
         downloadable=True,
     )
@@ -187,7 +187,7 @@ async def download_output_calc(
     Parity probe: ``files.list(scope_id=session.id)`` must include calc.py
     after turn sync (same gap class as data-analyst report.html — O1).
     """
-    outputs = await client.files.list(scope_id=session_id)
+    outputs = client.files.list(scope_id=session_id)
     files = outputs.get("data") or []
     calc_file = next(
         (
@@ -204,7 +204,7 @@ async def download_output_calc(
             f"(scope_id={session_id}, files={names}). "
             "Platform parity gap O1 — outputs sync may be missing."
         )
-    content = await client.files.download(calc_file["id"])
+    content = client.files.download(calc_file["id"])
     dest.write_bytes(content)
     print(f"Downloaded {dest.name} ({len(content)} bytes) via Files API")
 

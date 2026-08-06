@@ -179,7 +179,7 @@ async def upload_dataset(client: OMAClient, path: Path) -> dict:
         client.files.upload(..., downloadable=True) — no beta prefix/header.
     """
     payload = path.read_bytes()
-    return await client.files.upload(
+    return client.files.upload(
         file=(path.name, io.BytesIO(payload), "text/csv"),
         downloadable=True,
     )
@@ -208,7 +208,7 @@ async def download_report(
     OMA_DEV_FALLBACK reads the sandbox disk when Files API scope listing is
     empty — dev-only escape hatch, not in the cookbook.
     """
-    outputs = await client.files.list(scope_id=session_id)
+    outputs = client.files.list(scope_id=session_id)
     files = outputs.get("data") or []
     for item in files:
         print(item.get("filename"), item.get("size_bytes"))
@@ -218,7 +218,7 @@ async def download_report(
         None,
     )
     if report is not None:
-        content = await client.files.download(report["id"])
+        content = client.files.download(report["id"])
         dest.write_bytes(content)
         print(f"Downloaded {dest.name} ({len(content)} bytes) via Files API")
         return

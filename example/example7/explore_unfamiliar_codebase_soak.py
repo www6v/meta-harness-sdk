@@ -42,13 +42,13 @@ async def run_explore_unfamiliar_codebase_soak(
     keep_resources: bool = False,
 ) -> dict[str, Any]:
     """Run explore cookbook: zip mount, turns, mid-session resources.add/delete."""
-    repo_upload = await client.files.upload(
+    repo_upload = client.files.upload(
         file=("repo.zip", make_unfamiliar_repo_zip(), "application/zip"),
         downloadable=True,
     )
     repo_file_id = repo_upload["id"]
 
-    deploy_upload = await client.files.upload(
+    deploy_upload = client.files.upload(
         filename="DEPLOY_HISTORY.md",
         content=DEPLOY_HISTORY_BYTES,
         media_type="text/markdown",

@@ -129,7 +129,7 @@ async def main() -> None:
         rubric_file_id: str | None = None
         if use_file_rubric:
             rubric_bytes = RUBRIC_PATH.read_bytes()
-            uploaded = await client.files.upload(
+            uploaded = client.files.upload(
                 filename="outcome-rubric.md",
                 content=rubric_bytes,
                 media_type="text/markdown",

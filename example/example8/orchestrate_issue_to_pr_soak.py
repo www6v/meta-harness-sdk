@@ -40,7 +40,7 @@ async def run_orchestrate_issue_to_pr_soak(
     keep_resources: bool = False,
 ) -> dict[str, Any]:
     """Run orchestrate cookbook: zip mock gh + chain turn + verify turn."""
-    repo_upload = await client.files.upload(
+    repo_upload = client.files.upload(
         file=("repo.zip", make_orchestrate_repo_zip(), "application/zip"),
         downloadable=True,
     )

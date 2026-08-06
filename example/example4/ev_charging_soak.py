@@ -55,7 +55,7 @@ def _build_define_outcome(
 
 
 async def _session_has_brief(client: OMAClient, session_id: str) -> bool:
-    outputs = await client.files.list(scope_id=session_id)
+    outputs = client.files.list(scope_id=session_id)
     files = outputs.get("data") or []
     return any(f.get("filename") == BRIEF_FILENAME for f in files)
 
@@ -118,7 +118,7 @@ async def run_ev_charging_outcome_soak(
 
     rubric_file_id: str | None = None
     if use_file_rubric:
-        uploaded = await client.files.upload(
+        uploaded = client.files.upload(
             file=(
                 "ev-charging-rubric.md",
                 io.BytesIO(rubric_text.encode("utf-8")),

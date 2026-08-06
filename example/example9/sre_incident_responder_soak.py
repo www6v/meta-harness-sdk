@@ -115,7 +115,7 @@ async def run_sre_incident_responder_soak(
     )
     skill_version = skill.get("latest_version") or skill.get("version", "")
 
-    log_upload = await client.files.upload(
+    log_upload = client.files.upload(
         file=(
             "checkout-svc.log",
             fixture_path("logs/checkout-svc.log").read_bytes(),
@@ -123,7 +123,7 @@ async def run_sre_incident_responder_soak(
         ),
         downloadable=True,
     )
-    manifest_upload = await client.files.upload(
+    manifest_upload = client.files.upload(
         file=(
             "checkout-deploy.yaml",
             fixture_path("infra/k8s/checkout-deploy.yaml").read_bytes(),
@@ -131,7 +131,7 @@ async def run_sre_incident_responder_soak(
         ),
         downloadable=True,
     )
-    runbook_upload = await client.files.upload(
+    runbook_upload = client.files.upload(
         file=(
             "oom.md",
             fixture_path("runbooks/oom.md").read_bytes(),

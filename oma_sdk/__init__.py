@@ -11,13 +11,23 @@ Usage:
 
 Managed-agents resources (routed through anthropic SDK with custom base_url):
     client.agents, client.sessions, client.environments,
-    client.memory_stores, client.vaults, client.skills
+    client.memory_stores, client.vaults
 
-OMA-platform-only resources (raw httpx):
-    client.dreams, client.evals, client.runtimes,
+OMA-platform resources (httpx — CMA-aligned sync API):
+    client.skills, client.files, client.dreams, client.evals, client.runtimes,
     client.integrations, client.model_cards, client.cost_report,
-    client.me, client.api_keys, client.files, client.models,
-    client.events
+    client.me, client.api_keys, client.models, client.events
+
+Skills/files (aligned with Anthropic ``client.beta.skills`` / ``beta.files``)::
+
+    client.skills.create(display_title=..., files=[(\"x.zip\", buf)])
+    client.skills.list(limit=100)                 # iterable page
+    client.skills.versions.create(skill_id, files=[...])
+    client.files.upload(file=(name, f, \"text/csv\"))
+    client.files.list(scope_id=session.id)
+    client.files.download(file_id)
+
+Async variants use the ``*_async`` suffix (``upload_async``, …).
 """
 
 from __future__ import annotations
@@ -38,6 +48,7 @@ from .resources.model_cards import ModelCardsResource
 from .resources.models import ModelsResource
 from .resources.runtimes import RuntimesResource
 from .resources.sessions import SessionEventsResource
+from .resources.skills import SkillsResource
 from .event_flatten import flatten_session_event, install_event_flattening
 
 from .subagent import (
@@ -114,12 +125,17 @@ class OMAClient:
         self._http = httpx.AsyncClient(
             base_url=base_url,
             headers=http_headers,
-            timeout=30.0,
+            timeout=120.0,
+        )
+        self._http_sync = httpx.Client(
+            base_url=base_url,
+            headers=http_headers,
+            timeout=120.0,
         )
         self._base_url = base_url
         self._tenant_id = tenant_id
 
-        # OMA-platform-only resources
+        # OMA-platform resources (httpx)
         self.dreams = DreamsResource(self._http)
         self.evals = EvalsResource(self._http)
         self.runtimes = RuntimesResource(self._http)
@@ -128,7 +144,8 @@ class OMAClient:
         self.cost_report = CostReportResource(self._http)
         self.me = MeResource(self._http)
         self.api_keys = ApiKeysResource(self._http)
-        self.files = FilesResource(self._http)
+        self.files = FilesResource(self._http, sync=self._http_sync)
+        self.skills = SkillsResource(self._http, self._http_sync)
         self.models = ModelsResource(self._http)
         self.events = SessionEventsResource(self._http)
 
@@ -153,15 +170,37 @@ class OMAClient:
     def vaults(self):
         return self._anthropic.beta.vaults
 
-    @property
-    def skills(self):
-        return self._anthropic.beta.skills
+    def close(self) -> None:
+        """Close sync + async httpx clients (safe from sync CLIs)."""
+        try:
+            self._http_sync.close()
+        except Exception:
+            pass
+        try:
+            import asyncio
+
+            try:
+                asyncio.get_running_loop()
+            except RuntimeError:
+                asyncio.run(self._http.aclose())
+        except Exception:
+            pass
 
     async def aclose(self) -> None:
         await self._http.aclose()
+        try:
+            self._http_sync.close()
+        except Exception:
+            pass
 
     async def __aenter__(self) -> "OMAClient":
         return self
 
     async def __aexit__(self, *_) -> None:
         await self.aclose()
+
+    def __enter__(self) -> "OMAClient":
+        return self
+
+    def __exit__(self, *_) -> None:
+        self.close()

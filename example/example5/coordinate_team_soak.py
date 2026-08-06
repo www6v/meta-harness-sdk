@@ -73,7 +73,7 @@ async def upload_fixture(
     mount_name: str,
 ) -> str:
     path = fixture_path(rel_path)
-    uploaded = await client.files.upload(
+    uploaded = client.files.upload(
         filename=mount_name,
         content=path.read_text(encoding="utf-8"),
         media_type="text/markdown",
@@ -83,7 +83,7 @@ async def upload_fixture(
 
 
 async def _session_has_proposal(client: OMAClient, session_id: str) -> bool:
-    outputs = await client.files.list(scope_id=session_id)
+    outputs = client.files.list(scope_id=session_id)
     files = outputs.get("data") or []
     return any(f.get("filename") == PROPOSAL_FILENAME for f in files)
 

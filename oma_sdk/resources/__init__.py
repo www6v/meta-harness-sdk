@@ -8,6 +8,7 @@ from .me import MeResource
 from .model_cards import ModelCardsResource
 from .models import ModelsResource
 from .runtimes import RuntimesResource
+from .skills import SkillsResource
 
 __all__ = [
     "ApiKeysResource",
@@ -20,4 +21,5 @@ __all__ = [
     "ModelCardsResource",
     "ModelsResource",
     "RuntimesResource",
+    "SkillsResource",
 ]
