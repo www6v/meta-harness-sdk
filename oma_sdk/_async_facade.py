@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from .resources.files import FilesResource
-from .resources.skills import SkillsResource, SkillVersionsResource
-from .resources.models_base import APIObject, SyncPage
+from .api.files import FilesResource
+from .api.skills import SkillsResource, SkillVersionsResource
+from .api.models_base import APIObject, SyncPage
 
 
 class AsyncFilesFacade:

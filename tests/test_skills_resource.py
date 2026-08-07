@@ -9,7 +9,7 @@ import zipfile
 import pytest
 
 from oma_sdk import OMAClient
-from oma_sdk.api.skills import SkillExamples
+from oma_sdk.examples.skills import SkillExamples
 
 
 @pytest.fixture

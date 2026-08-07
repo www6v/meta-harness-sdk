@@ -52,7 +52,7 @@
 ## 代码修改清单
 
 ### 核心文件
-- ✅ `oma_sdk/api/agents.py` - 添加 harness 参数支持
+- ✅ `oma_sdk/examples/agents.py` - 添加 harness 参数支持
 - ✅ 添加 `_build_metadata()` 辅助函数
 - ✅ 添加 `HarnessType` 类型定义
 - ✅ 更新 5 个方法签名（create_and_retrieve, update_agent, list_agent_versions, archive_agent, delete_agent）
@@ -74,7 +74,7 @@
 
 ```python
 from oma_sdk import OMAClient
-from oma_sdk.api.agents import _build_metadata, MODEL
+from oma_sdk.examples.agents import _build_metadata, MODEL
 import os
 
 os.environ.setdefault("OMA_API_KEY", "dev-key")

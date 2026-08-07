@@ -7,7 +7,7 @@ import os
 import anthropic
 import pytest
 
-from oma_sdk.api.skills import UPLOADED_SKILL_TITLES
+from oma_sdk.examples.skills import UPLOADED_SKILL_TITLES
 from oma_sdk.examples import SkillExamples
 
 _RUN_LIVE_MULTI = os.getenv("OMA_RUN_LIVE_MULTI_SKILLS", "0") == "1"

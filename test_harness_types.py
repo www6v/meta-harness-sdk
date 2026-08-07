@@ -18,7 +18,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from oma_sdk import OMAClient
-from oma_sdk.api.agents import _build_metadata, MODEL
+from oma_sdk.examples.agents import _build_metadata, MODEL
 
 
 def test_harness_types():

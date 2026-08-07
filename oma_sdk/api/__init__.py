@@ -1,32 +1,25 @@
-"""
-SDK Examples - High-level helper functions for common operations.
-
-This module provides example implementations extracted from E2E tests,
-making it easy to perform common operations without writing boilerplate code.
-"""
-
-from __future__ import annotations
-
-from .agents import AgentExamples
-from .environments import EnvironmentExamples
-from .events import EventsExamples
-from .files import FileExamples
-from .sessions import SessionExamples
-from .memory_stores import MemoryStoreExamples
-from .vaults import VaultExamples
-from .skills import SkillExamples
-from .misc import MiscExamples
-from .subagents import SubagentExamples
+from .api_keys import ApiKeysResource
+from .cost_report import CostReportResource
+from .dreams import DreamsResource
+from .evals import EvalsResource
+from .files import FilesResource
+from .integrations import IntegrationsResource
+from .me import MeResource
+from .model_cards import ModelCardsResource
+from .models import ModelsResource
+from .runtimes import RuntimesResource
+from .skills import SkillsResource
 
 __all__ = [
-    "AgentExamples",
-    "EnvironmentExamples",
-    "EventsExamples",
-    "FileExamples",
-    "SessionExamples",
-    "MemoryStoreExamples",
-    "VaultExamples",
-    "SkillExamples",
-    "MiscExamples",
-    "SubagentExamples",
+    "ApiKeysResource",
+    "CostReportResource",
+    "DreamsResource",
+    "EvalsResource",
+    "FilesResource",
+    "IntegrationsResource",
+    "MeResource",
+    "ModelCardsResource",
+    "ModelsResource",
+    "RuntimesResource",
+    "SkillsResource",
 ]

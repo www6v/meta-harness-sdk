@@ -2,7 +2,7 @@
 
 ## 修改内容
 
-### 1. 核心修改：`oma_sdk/api/agents.py`
+### 1. 核心修改：`oma_sdk/examples/agents.py`
 
 添加了 harness 参数支持，允许在创建 agent 时指定不同的 harness 后端。
 
@@ -82,7 +82,7 @@ agent = client.beta.agents.create(**create_kwargs)
 
 ```python
 from oma_sdk import OMAClient
-from oma_sdk.api.agents import AgentExamples
+from oma_sdk.examples.agents import AgentExamples
 
 client = OMAClient(base_url="http://127.0.0.1:8787", api_key="dev-key")
 
@@ -133,7 +133,7 @@ python example_harness_selection.py
 
 ## 相关文件
 
-- `oma_sdk/api/agents.py` - 核心实现
+- `oma_sdk/examples/agents.py` - 核心实现
 - `test_harness_types.py` - 测试脚本
 - `example/example_harness_selection.py` - 使用示例
 - `HARNESS_SUPPORT.md` - 用户文档

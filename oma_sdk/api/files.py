@@ -1,296 +1,331 @@
-"""
-File Examples - High-level helpers for file operations (CMA-aligned sync API).
+"""Files resource — CMA-aligned sync API over OMA ``/v1/files``.
 
-Uses ``client.files.upload`` / ``retrieve`` / ``download`` / ``delete`` —
-same shapes as Anthropic ``client.beta.files.*``.
+Matches Anthropic Managed Agents SDK shapes::
+
+    client.files.upload(file=(name, f, \"text/csv\"))
+    client.files.list(scope_id=session.id)
+    client.files.download(file_id)          # raw bytes
+    client.files.retrieve_metadata(file_id) # CMA name
+    client.files.retrieve(file_id)          # alias
+    client.files.delete(file_id)
+
+Sync methods are the primary CMA surface (same as ``client.agents``).
+Async variants use the ``*_async`` suffix for existing cookbook ``await`` calls.
 """
 
 from __future__ import annotations
 
+import base64 as _b64
 import io
-import os
-from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import IO, Any
 
-if TYPE_CHECKING:
-    from anthropic import Anthropic as _Anthropic
+import httpx
 
-_KEEP = os.getenv("OMA_KEEP_RESOURCES", "0") == "1"
+from .._exceptions import raise_for_status
+from .models_base import APIObject, SyncPage, wrap_page_response, wrap_response
 
 
-def _id(obj: Any) -> str:
-    if isinstance(obj, dict):
-        return str(obj["id"])
-    return str(obj.id)
+class FilesResource:
+    def __init__(
+        self,
+        http: httpx.AsyncClient,
+        sync: httpx.Client | None = None,
+    ) -> None:
+        self._http = http
+        self._sync = sync
 
+    def _require_sync(self) -> httpx.Client:
+        if self._sync is None:
+            raise RuntimeError(
+                "sync FilesResource methods require OMAClient "
+                "(constructed with a sync httpx.Client by default)"
+            )
+        return self._sync
 
-def _get(obj: Any, key: str, default: Any = None) -> Any:
-    if isinstance(obj, dict):
-        return obj.get(key, default)
-    return getattr(obj, key, default) if hasattr(obj, key) else (
-        obj.get(key, default) if hasattr(obj, "get") else default
-    )
+    # -- CMA sync -----------------------------------------------------------
 
-
-def _as_dict(obj: Any) -> dict:
-    if isinstance(obj, dict):
-        return obj
-    if hasattr(obj, "model_dump"):
-        return obj.model_dump()
-    if hasattr(obj, "to_dict"):
-        return obj.to_dict()
-    return dict(obj)
-
-
-class FileExamples:
-    """Example operations for files (upload / retrieve / download / delete)."""
-
-    @staticmethod
-    def _files(client: Any):
-        files = getattr(client, "files", None)
-        if files is not None:
-            return files
-        files = getattr(client, "_oma_files", None)
-        if files is not None:
-            return files
-        return _HttpxFilesAdapter(client)
-
-    @staticmethod
-    def upload_multipart_and_retrieve(
-        client: Any,
+    def list(
+        self,
         *,
-        filename: str = "sdk-e2e-upload.txt",
-        payload: bytes = b"hello from sdk e2e",
-        media_type: str = "text/plain",
-    ) -> dict:
-        """Upload via multipart, retrieve, download bytes (sync / CMA-shaped)."""
-        files = FileExamples._files(client)
-        uploaded = files.upload(
-            file=(filename, io.BytesIO(payload), media_type),
-            downloadable=True,
-        )
-        try:
-            assert _id(uploaded)
-            assert _get(uploaded, "filename") == filename
-            assert _get(uploaded, "size_bytes") == len(payload)
-
-            got = files.retrieve(_id(uploaded))
-            assert _id(got) == _id(uploaded)
-            assert _get(got, "filename") == filename
-
-            downloaded = files.content(_id(uploaded))
-            assert downloaded == payload
-
-            return {
-                "uploaded": _as_dict(uploaded),
-                "retrieved": _as_dict(got),
-                "downloaded": downloaded,
-            }
-        finally:
-            if not _KEEP:
-                try:
-                    files.delete(_id(uploaded))
-                except Exception:
-                    pass
-            else:
-                print(
-                    f"\n[KEEP] file {_id(uploaded)} ({filename}) — "
-                    f"delete manually when done"
-                )
-
-    @staticmethod
-    def upload_json_and_retrieve(
-        client: Any,
-        *,
-        filename: str = "sdk-e2e-json-upload.csv",
-        payload: str = "order_id,price\n1001,24.99\n1002,39.99\n",
-        media_type: str = "text/csv",
-    ) -> dict:
-        files = FileExamples._files(client)
-        uploaded = files.upload(
-            filename=filename,
-            content=payload,
-            media_type=media_type,
-            downloadable=True,
-        )
-        try:
-            assert _id(uploaded)
-            assert _get(uploaded, "filename") == filename
-            assert _get(uploaded, "size_bytes") == len(payload.encode("utf-8"))
-
-            got = files.retrieve(_id(uploaded))
-            assert _id(got) == _id(uploaded)
-
-            downloaded = files.content(_id(uploaded))
-            assert downloaded.decode("utf-8") == payload
-
-            return {
-                "uploaded": _as_dict(uploaded),
-                "retrieved": _as_dict(got),
-                "downloaded": downloaded,
-            }
-        finally:
-            if not _KEEP:
-                try:
-                    files.delete(_id(uploaded))
-                except Exception:
-                    pass
-            else:
-                print(
-                    f"\n[KEEP] file {_id(uploaded)} ({filename}) — "
-                    f"delete manually when done"
-                )
-
-    @staticmethod
-    def list_files(client: Any) -> Any:
-        files = FileExamples._files(client)
-        result = files.list()
-        data = getattr(result, "data", None)
-        if data is None and isinstance(result, dict):
-            data = result.get("data")
-        assert isinstance(data, list)
-        return result
-
-    @staticmethod
-    def list_by_session(client: Any, session_id: str) -> Any:
-        files = FileExamples._files(client)
-        result = files.list(scope_id=session_id)
-        data = getattr(result, "data", None)
-        if data is None and isinstance(result, dict):
-            data = result.get("data")
-        assert isinstance(data, list)
-        return result
-
-    @staticmethod
-    def upload_from_path(
-        client: Any,
-        path: str | Path,
-        *,
-        media_type: str | None = None,
         scope_id: str | None = None,
-    ) -> dict:
-        p = Path(path)
-        payload = p.read_bytes()
-        mt = media_type or "application/octet-stream"
-        files = FileExamples._files(client)
-        uploaded = files.upload(
-            file=(p.name, io.BytesIO(payload), mt),
+        limit: int | None = None,
+        order: str | None = None,
+        before_id: str | None = None,
+        after_id: str | None = None,
+        **extra_params: Any,
+    ) -> SyncPage:
+        params = _list_params(
             scope_id=scope_id,
-            downloadable=True,
+            limit=limit,
+            order=order,
+            before_id=before_id,
+            after_id=after_id,
+            **extra_params,
         )
-        try:
-            assert _id(uploaded)
-            assert _get(uploaded, "size_bytes") == len(payload)
-            return {"uploaded": _as_dict(uploaded), "path": str(p)}
-        finally:
-            if not _KEEP:
-                try:
-                    files.delete(_id(uploaded))
-                except Exception:
-                    pass
+        r = self._require_sync().get("/v1/files", params=params)
+        return wrap_page_response(r)
 
-    # Keep async names as thin wrappers for older call sites.
-    @staticmethod
-    async def upload_multipart_and_retrieve_async(client: Any, **kwargs: Any) -> dict:
-        return FileExamples.upload_multipart_and_retrieve(client, **kwargs)
+    def retrieve(self, file_id: str) -> APIObject:
+        r = self._require_sync().get(f"/v1/files/{file_id}")
+        return wrap_response(r)
 
-    @staticmethod
-    async def upload_json_and_retrieve_async(client: Any, **kwargs: Any) -> dict:
-        return FileExamples.upload_json_and_retrieve(client, **kwargs)
+    def retrieve_metadata(self, file_id: str) -> APIObject:
+        """CMA alias for :meth:`retrieve`."""
+        return self.retrieve(file_id)
 
-
-class _HttpxFilesAdapter:
-    """Minimal sync facade over a raw ``anthropic.Anthropic`` instance."""
-
-    def __init__(self, client: "_Anthropic") -> None:
-        self._client = client
-
-    def _http(self):
-        inner = getattr(self._client, "_client", None)
-        if inner is None:
-            raise RuntimeError("could not locate httpx client on anthropic.Anthropic")
-        return inner
-
-    def upload(self, **kwargs: Any) -> dict:
-        import base64 as _b64
-
-        client = self._http()
-        file_tuple = kwargs.get("file")
-        content = kwargs.get("content")
-
-        if file_tuple is not None:
-            if len(file_tuple) == 3:
-                fname, fobj, mt = file_tuple  # type: ignore[misc]
-            elif len(file_tuple) == 2:
-                fname, fobj = file_tuple  # type: ignore[misc]
-                mt = kwargs.get("media_type") or "application/octet-stream"
-            else:
-                raise ValueError(
-                    "'file' must be (filename, file_obj) or "
-                    "(filename, file_obj, media_type)"
-                )
-            files = {"file": (fname, fobj, mt)}
-            data: dict[str, str] = {}
-            if kwargs.get("scope_id"):
-                data["scope_id"] = kwargs["scope_id"]
-            if kwargs.get("downloadable"):
-                data["downloadable"] = "true"
-            req = client.build_request("POST", "/v1/files", files=files, data=data)
-        elif content is not None:
-            filename = kwargs.get("filename")
-            if filename is None:
-                raise ValueError("'filename' is required for JSON upload")
-            if isinstance(content, bytes):
-                text = _b64.b64encode(content).decode("ascii")
-                enc = kwargs.get("encoding") or "base64"
-            else:
-                text = content
-                enc = kwargs.get("encoding") or "utf8"
-            body: dict[str, Any] = {
-                "filename": filename,
-                "content": text,
-                "encoding": enc,
-                "downloadable": bool(kwargs.get("downloadable", False)),
-            }
-            if kwargs.get("media_type"):
-                body["media_type"] = kwargs["media_type"]
-            if kwargs.get("scope_id"):
-                body["scope_id"] = kwargs["scope_id"]
-            req = client.build_request("POST", "/v1/files", json=body)
-        else:
-            raise ValueError("pass either 'file' or 'content'")
-
-        resp = client.send(req)
-        resp.raise_for_status()
-        return resp.json()
-
-    def retrieve(self, file_id: str) -> dict:
-        client = self._http()
-        req = client.build_request("GET", f"/v1/files/{file_id}")
-        resp = client.send(req)
-        resp.raise_for_status()
-        return resp.json()
-
-    def list(self, **params: Any) -> dict:
-        client = self._http()
-        req = client.build_request("GET", "/v1/files", params=params)
-        resp = client.send(req)
-        resp.raise_for_status()
-        return resp.json()
-
-    def content(self, file_id: str) -> bytes:
-        client = self._http()
-        req = client.build_request("GET", f"/v1/files/{file_id}/content")
-        resp = client.send(req)
-        resp.raise_for_status()
-        return resp.content
+    def upload(
+        self,
+        *,
+        file: tuple[str, IO[bytes] | bytes] | tuple[str, IO[bytes] | bytes, str] | None = None,
+        filename: str | None = None,
+        content: bytes | str | None = None,
+        media_type: str | None = None,
+        encoding: str | None = None,
+        scope_id: str | None = None,
+        downloadable: bool = False,
+    ) -> APIObject:
+        """Upload a file (CMA: ``files.upload(file=(name, f, mime))``)."""
+        mode = _upload_mode(file=file, content=content, filename=filename)
+        sync = self._require_sync()
+        if mode == "multipart":
+            return _post_multipart_sync(
+                sync,
+                file=file,  # type: ignore[arg-type]
+                media_type=media_type,
+                scope_id=scope_id,
+                downloadable=downloadable,
+            )
+        return _post_json_sync(
+            sync,
+            filename=filename,  # type: ignore[arg-type]
+            content=content,  # type: ignore[arg-type]
+            media_type=media_type,
+            encoding=encoding,
+            scope_id=scope_id,
+            downloadable=downloadable,
+        )
 
     def download(self, file_id: str) -> bytes:
-        return self.content(file_id)
+        r = self._require_sync().get(f"/v1/files/{file_id}/content")
+        raise_for_status(r)
+        return r.content
 
-    def delete(self, file_id: str) -> dict:
-        client = self._http()
-        req = client.build_request("DELETE", f"/v1/files/{file_id}")
-        resp = client.send(req)
-        resp.raise_for_status()
-        return resp.json()
+    def content(self, file_id: str) -> bytes:
+        """Alias for :meth:`download`."""
+        return self.download(file_id)
+
+    def delete(self, file_id: str) -> APIObject:
+        r = self._require_sync().delete(f"/v1/files/{file_id}")
+        return wrap_response(r)
+
+    # -- async (cookbook) ---------------------------------------------------
+
+    async def list_async(
+        self,
+        *,
+        scope_id: str | None = None,
+        limit: int | None = None,
+        order: str | None = None,
+        before_id: str | None = None,
+        after_id: str | None = None,
+        **extra_params: Any,
+    ) -> SyncPage:
+        params = _list_params(
+            scope_id=scope_id,
+            limit=limit,
+            order=order,
+            before_id=before_id,
+            after_id=after_id,
+            **extra_params,
+        )
+        r = await self._http.get("/v1/files", params=params)
+        return wrap_page_response(r)
+
+    async def retrieve_async(self, file_id: str) -> APIObject:
+        r = await self._http.get(f"/v1/files/{file_id}")
+        return wrap_response(r)
+
+    async def upload_async(
+        self,
+        *,
+        file: tuple[str, IO[bytes] | bytes] | tuple[str, IO[bytes] | bytes, str] | None = None,
+        filename: str | None = None,
+        content: bytes | str | None = None,
+        media_type: str | None = None,
+        encoding: str | None = None,
+        scope_id: str | None = None,
+        downloadable: bool = False,
+    ) -> APIObject:
+        mode = _upload_mode(file=file, content=content, filename=filename)
+        if mode == "multipart":
+            files, data = _multipart_body(
+                file=file,  # type: ignore[arg-type]
+                media_type=media_type,
+                scope_id=scope_id,
+                downloadable=downloadable,
+            )
+            r = await self._http.post("/v1/files", files=files, data=data)
+            return wrap_response(r)
+        body = _json_body(
+            filename=filename,  # type: ignore[arg-type]
+            content=content,  # type: ignore[arg-type]
+            media_type=media_type,
+            encoding=encoding,
+            scope_id=scope_id,
+            downloadable=downloadable,
+        )
+        r = await self._http.post("/v1/files", json=body)
+        return wrap_response(r)
+
+    async def download_async(self, file_id: str) -> bytes:
+        r = await self._http.get(f"/v1/files/{file_id}/content")
+        raise_for_status(r)
+        return r.content
+
+    async def content_async(self, file_id: str) -> bytes:
+        return await self.download_async(file_id)
+
+    async def delete_async(self, file_id: str) -> APIObject:
+        r = await self._http.delete(f"/v1/files/{file_id}")
+        return wrap_response(r)
+
+
+# ---------------------------------------------------------------------------
+# helpers
+# ---------------------------------------------------------------------------
+
+def _list_params(
+    *,
+    scope_id: str | None,
+    limit: int | None,
+    order: str | None,
+    before_id: str | None,
+    after_id: str | None,
+    **extra_params: Any,
+) -> dict[str, Any]:
+    params: dict[str, Any] = dict(extra_params)
+    if scope_id is not None:
+        params["scope_id"] = scope_id
+    if limit is not None:
+        params["limit"] = limit
+    if order is not None:
+        params["order"] = order
+    if before_id is not None:
+        params["before_id"] = before_id
+    if after_id is not None:
+        params["after_id"] = after_id
+    return params
+
+
+def _upload_mode(*, file: Any, content: Any, filename: str | None) -> str:
+    if file is not None and content is not None:
+        raise ValueError("pass either 'file' or 'content', not both")
+    if file is None and content is None:
+        raise ValueError("pass either 'file' or 'content'")
+    if file is not None:
+        return "multipart"
+    if filename is None:
+        raise ValueError("'filename' is required for JSON upload")
+    return "json"
+
+
+def _as_file_obj(obj: IO[bytes] | bytes) -> IO[bytes]:
+    if isinstance(obj, (bytes, bytearray)):
+        return io.BytesIO(obj)
+    return obj
+
+
+def _multipart_body(
+    *,
+    file: tuple[str, IO[bytes] | bytes] | tuple[str, IO[bytes] | bytes, str],
+    media_type: str | None,
+    scope_id: str | None,
+    downloadable: bool,
+) -> tuple[dict[str, tuple[str, IO[bytes], str]], dict[str, str]]:
+    if len(file) == 3:
+        fname, fobj, mt = file  # type: ignore[misc]
+    elif len(file) == 2:
+        fname, fobj = file  # type: ignore[misc]
+        mt = media_type or "application/octet-stream"
+    else:
+        raise ValueError(
+            "'file' must be (filename, file_obj) or "
+            "(filename, file_obj, media_type)"
+        )
+    if media_type is not None:
+        mt = media_type
+    files = {"file": (fname, _as_file_obj(fobj), mt)}
+    data: dict[str, str] = {}
+    if scope_id is not None:
+        data["scope_id"] = scope_id
+    if downloadable:
+        data["downloadable"] = "true"
+    return files, data
+
+
+def _json_body(
+    *,
+    filename: str,
+    content: bytes | str,
+    media_type: str | None,
+    encoding: str | None,
+    scope_id: str | None,
+    downloadable: bool,
+) -> dict[str, Any]:
+    if isinstance(content, bytes):
+        text = _b64.b64encode(content).decode("ascii")
+        default_encoding = "base64"
+    else:
+        text = content
+        default_encoding = "utf8"
+    body: dict[str, Any] = {
+        "filename": filename,
+        "content": text,
+        "encoding": encoding or default_encoding,
+        "downloadable": downloadable,
+    }
+    if media_type:
+        body["media_type"] = media_type
+    if scope_id is not None:
+        body["scope_id"] = scope_id
+    return body
+
+
+def _post_multipart_sync(
+    sync: httpx.Client,
+    *,
+    file: tuple[str, IO[bytes] | bytes] | tuple[str, IO[bytes] | bytes, str],
+    media_type: str | None,
+    scope_id: str | None,
+    downloadable: bool,
+) -> APIObject:
+    files, data = _multipart_body(
+        file=file,
+        media_type=media_type,
+        scope_id=scope_id,
+        downloadable=downloadable,
+    )
+    r = sync.post("/v1/files", files=files, data=data)
+    return wrap_response(r)
+
+
+def _post_json_sync(
+    sync: httpx.Client,
+    *,
+    filename: str,
+    content: bytes | str,
+    media_type: str | None,
+    encoding: str | None,
+    scope_id: str | None,
+    downloadable: bool,
+) -> APIObject:
+    body = _json_body(
+        filename=filename,
+        content=content,
+        media_type=media_type,
+        encoding=encoding,
+        scope_id=scope_id,
+        downloadable=downloadable,
+    )
+    r = sync.post("/v1/files", json=body)
+    return wrap_response(r)

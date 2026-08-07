@@ -61,7 +61,7 @@ from oma_sdk import (
     stream_until_end_turn,
     wait_for_idle_status,
 )
-from oma_sdk.api.agents import MODEL as DEFAULT_MODEL
+from oma_sdk.examples.agents import MODEL as DEFAULT_MODEL
 
 # ---------------------------------------------------------------------------
 # Cookbook mapping: notebook Cell 1 (setup)

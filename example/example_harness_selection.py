@@ -19,7 +19,7 @@ if sys.version_info < (3, 11):
     sys.exit("Python 3.11+ required")
 
 from oma_sdk import OMAClient
-from oma_sdk.api.agents import _build_metadata, MODEL
+from oma_sdk.examples.agents import _build_metadata, MODEL
 
 
 def create_agent_with_harness(client: OMAClient, harness_type: str, name: str) -> dict:

@@ -23,18 +23,18 @@ from ._async_facade import (
     AsyncSkillsFacade,
 )
 from .event_flatten import install_event_flattening
-from .resources.api_keys import ApiKeysResource
-from .resources.cost_report import CostReportResource
-from .resources.dreams import DreamsResource
-from .resources.evals import EvalsResource
-from .resources.files import FilesResource
-from .resources.integrations import IntegrationsResource
-from .resources.me import MeResource
-from .resources.model_cards import ModelCardsResource
-from .resources.models import ModelsResource
-from .resources.runtimes import RuntimesResource
-from .resources.sessions import SessionEventsResource
-from .resources.skills import SkillsResource
+from .api.api_keys import ApiKeysResource
+from .api.cost_report import CostReportResource
+from .api.dreams import DreamsResource
+from .api.evals import EvalsResource
+from .api.files import FilesResource
+from .api.integrations import IntegrationsResource
+from .api.me import MeResource
+from .api.model_cards import ModelCardsResource
+from .api.models import ModelsResource
+from .api.runtimes import RuntimesResource
+from .api.sessions import SessionEventsResource
+from .api.skills import SkillsResource
 
 logger = logging.getLogger("oma_sdk")
 

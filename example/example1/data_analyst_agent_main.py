@@ -60,7 +60,7 @@ import os
 from pathlib import Path
 
 from oma_sdk import OMAClient, StreamConfig, stream_until_end_turn, wait_for_idle_status
-from oma_sdk.api.agents import MODEL as DEFAULT_MODEL
+from oma_sdk.examples.agents import MODEL as DEFAULT_MODEL
 
 # ---------------------------------------------------------------------------
 # Cookbook mapping: notebook Cell 2 (setup)

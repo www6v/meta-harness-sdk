@@ -1,287 +1,261 @@
 """
-Session Examples - High-level helper functions for session operations.
+OMA-native session events resource.
+
+Wraps the server's three events endpoints:
+
+    POST /v1/sessions/{id}/events         -> send()
+    GET  /v1/sessions/{id}/events         -> list()
+    GET  /v1/sessions/{id}/events/stream  -> stream()  (SSE)
+
+These are the raw server endpoints — distinct from the Anthropic SDK's
+``client.beta.sessions.events`` wrapper, which speaks the managed-agents
+protocol. Use this resource when you want direct access to the event log
+(e.g. for replay, tailing, or feeding events from a non-Anthropic client).
+
+Async methods (``send`` / ``list`` / ``stream``) are the primary surface used
+by cookbook helpers. Sync counterparts use the ``*_sync`` suffix.
 """
 
 from __future__ import annotations
 
-import os
-import time
-from typing import TYPE_CHECKING
+import json
+from typing import Any, AsyncIterator, Iterator
 
-from anthropic import RateLimitError
+import httpx
 
-if TYPE_CHECKING:
-    import anthropic
-
-_KEEP = os.getenv("OMA_KEEP_RESOURCES", "0") == "1"
-
-# How long to wait before retrying a session-creation 429, and how many times.
-# The server's sliding window is 60 s; waiting 16 s lets the oldest slot expire
-# after ~4 retries in the worst case (all 5 previous sessions < 4 s old).
-_SESSION_RETRY_WAIT = 16
-_SESSION_RETRY_MAX = 4
+from .._exceptions import raise_for_status
+from .._http import json_or_empty
 
 
-class SessionExamples:
-    """Example operations for sessions."""
+class SessionEventsResource:
+    """Send, list, and stream events on a session."""
 
-    @staticmethod
-    def _create_session(
-        client: anthropic.Anthropic,
-        agent_id: str,
-        environment_id: str,
-        *,
-        title: str | None = None,
-        vault_ids: list[str] | None = None,
-    ):
-        """Create a session, retrying up to _SESSION_RETRY_MAX times on 429."""
-        for attempt in range(_SESSION_RETRY_MAX + 1):
-            try:
-                kwargs: dict = {
-                    "agent": agent_id,
-                    "environment_id": environment_id,
-                }
-                if title is not None:
-                    kwargs["title"] = title
-                if vault_ids:
-                    kwargs["vault_ids"] = vault_ids
-                return client.beta.sessions.create(**kwargs)
-            except RateLimitError as exc:
-                if "session" not in str(exc).lower() or attempt == _SESSION_RETRY_MAX:
-                    raise
-                print(
-                    f"\n[RATE LIMIT] Session 429 — waiting {_SESSION_RETRY_WAIT}s "
-                    f"for sliding window to clear (attempt {attempt + 1}/{_SESSION_RETRY_MAX})..."
-                )
-                time.sleep(_SESSION_RETRY_WAIT)
+    def __init__(
+        self,
+        http: httpx.AsyncClient,
+        sync: httpx.Client | None = None,
+    ) -> None:
+        self._http = http
+        self._sync = sync
 
-    @staticmethod
-    def vault_ids_round_trip(
-        client: anthropic.Anthropic,
-        agent_id: str,
-        environment_id: str,
-        vault_id: str,
+    def _require_sync(self) -> httpx.Client:
+        if self._sync is None:
+            raise RuntimeError(
+                "sync SessionEventsResource methods require a sync httpx.Client"
+            )
+        return self._sync
+
+    # -- sync ---------------------------------------------------------------
+
+    def send_sync(
+        self,
+        session_id: str,
+        events: list[dict[str, Any]],
     ) -> dict:
-        """Create a session with vault_ids and verify round-trip on retrieve."""
-        sess = SessionExamples._create_session(
-            client,
-            agent_id,
-            environment_id,
-            vault_ids=[vault_id],
+        r = self._require_sync().post(
+            f"/v1/sessions/{session_id}/events",
+            json={"events": events},
         )
-        try:
-            assert sess.id
-            got = client.beta.sessions.retrieve(sess.id)
-            assert got.vault_ids == [vault_id]
-            return {"session": sess, "retrieved": got}
-        finally:
-            if not _KEEP:
-                client.beta.sessions.archive(sess.id)
+        return json_or_empty(r)
 
-    @staticmethod
-    def create_retrieve_and_list(
-        client: anthropic.Anthropic,
-        agent_id: str,
-        environment_id: str
-    ) -> dict:
-        """Create a session, retrieve it by id, and verify it appears in the active list."""
-        sess = SessionExamples._create_session(client, agent_id, environment_id)
-        try:
-            assert sess.id
-            got = client.beta.sessions.retrieve(sess.id)
-            assert got.id == sess.id
-            page = client.beta.sessions.list()
-            assert any(s.id == sess.id for s in page)
-            return {"session": sess, "retrieved": got}
-        finally:
-            if not _KEEP:
-                client.beta.sessions.archive(sess.id)
-            else:
-                print(f"\n[KEEP] session {sess.id} left active — archive manually when done")
-
-    @staticmethod
-    def send_and_list_events(
-        client: anthropic.Anthropic,
-        agent_id: str,
-        environment_id: str
-    ) -> dict:
-        """Create a session, send events, and list them."""
-        sess = SessionExamples._create_session(client, agent_id, environment_id)
-        try:
-            result = client.beta.sessions.events.send(
-                sess.id,
-                events=[{"type": "user.message", "content": "hello from sdk e2e"}],
-            )
-            assert result is not None
-            events = list(client.beta.sessions.events.list(sess.id))
-            assert isinstance(events, list)
-            return {"session": sess, "events": events, "result": result}
-        finally:
-            if not _KEEP:
-                client.beta.sessions.archive(sess.id)
-            else:
-                print(f"\n[KEEP] session {sess.id} (with events) left active — archive manually when done")
-
-    @staticmethod
-    def update_session(
-        client: anthropic.Anthropic,
-        agent_id: str,
-        environment_id: str,
+    def list_sync(
+        self,
+        session_id: str,
         *,
-        title: str = "sdk-e2e-update-before",
-        title_after: str = "sdk-e2e-update-after",
+        limit: int | None = None,
+        order: str | None = None,
+        after_seq: int | None = None,
+        next_page: str | None = None,
     ) -> dict:
-        """Create a session, update title/metadata, and verify."""
-        sess = SessionExamples._create_session(
-            client, agent_id, environment_id, title=title,
+        params = _list_params(
+            limit=limit,
+            order=order,
+            after_seq=after_seq,
+            next_page=next_page,
         )
-        try:
-            updated = client.beta.sessions.update(
-                sess.id,
-                title=title_after,
-                metadata={"sdk": "wire-compat"},
-            )
-            assert updated.title == title_after
-            assert updated.metadata["sdk"] == "wire-compat"
-            return {"session": sess, "updated": updated}
-        finally:
-            if not _KEEP:
-                client.beta.sessions.archive(sess.id)
+        r = self._require_sync().get(
+            f"/v1/sessions/{session_id}/events",
+            params=params,
+        )
+        return json_or_empty(r)
 
-    @staticmethod
-    def resource_crud(
-        client: anthropic.Anthropic,
-        agent_id: str,
-        environment_id: str,
-        file_id: str,
-    ) -> dict:
-        """Exercise sessions.resources add/list/retrieve/delete."""
-        sess = SessionExamples._create_session(client, agent_id, environment_id)
-        try:
-            added = client.beta.sessions.resources.add(
-                sess.id,
-                type="file",
-                file_id=file_id,
-                mount_path="/workspace/sdk-resource.txt",
-            )
-            assert added.id
-            listed = client.beta.sessions.resources.list(sess.id)
-            assert any(r.id == added.id for r in listed)
-            got = client.beta.sessions.resources.retrieve(
-                added.id, session_id=sess.id,
-            )
-            assert got.id == added.id
-            client.beta.sessions.resources.delete(added.id, session_id=sess.id)
-            return {"session": sess, "resource": added}
-        finally:
-            if not _KEEP:
-                client.beta.sessions.archive(sess.id)
+    def stream_sync(
+        self,
+        session_id: str,
+        *,
+        replay: bool = False,
+        timeout: float | None = None,
+    ) -> Iterator[dict[str, Any]]:
+        params: dict[str, Any] = {}
+        if replay:
+            params["replay"] = "1"
+        stream_kwargs: dict[str, Any] = {"params": params}
+        if timeout is not None:
+            stream_kwargs["timeout"] = timeout
+        with self._require_sync().stream(
+            "GET",
+            f"/v1/sessions/{session_id}/events/stream",
+            **stream_kwargs,
+        ) as resp:
+            raise_for_status(resp)
+            yield from _iter_sse_events_sync(resp)
 
-    @staticmethod
-    def thread_retrieve_and_archive(
-        client: anthropic.Anthropic,
-        agent_id: str,
-        environment_id: str,
-    ) -> dict:
-        """Send sub-agent events, then retrieve and archive a thread."""
-        sess = SessionExamples._create_session(client, agent_id, environment_id)
-        try:
-            client.beta.sessions.events.send(
-                sess.id,
-                events=[{
-                    "type": "session.thread_created",
-                    "session_thread_id": "sthr_sdk_worker",
-                    "agent_id": "agt_worker",
-                    "agent_name": "Worker",
-                    "parent_thread_id": "sthr_primary",
-                }],
-            )
-            thread = client.beta.sessions.threads.retrieve(
-                "sthr_sdk_worker", session_id=sess.id,
-            )
-            assert thread.id == "sthr_sdk_worker"
-            archived = client.beta.sessions.threads.archive(
-                "sthr_sdk_worker", session_id=sess.id,
-            )
-            assert archived.status == "archived"
-            return {"session": sess, "thread": thread, "archived": archived}
-        finally:
-            if not _KEEP:
-                client.beta.sessions.archive(sess.id)
+    # -- async (primary) ----------------------------------------------------
 
-    @staticmethod
-    def crud_and_events(
-        client: anthropic.Anthropic,
-        agent_id: str,
-        environment_id: str
+    async def send(
+        self,
+        session_id: str,
+        events: list[dict[str, Any]],
     ) -> dict:
+        """Append one or more events to a session.
+
+        Returns ``{"status": "queued"}`` on success (HTTP 202).
         """
-        Create one session and exercise retrieve, list, send-events, and list-events on it.
-        Combines what would otherwise be two separate session creations, keeping total
-        creations per test run to 2 (safely under the 5/60s server rate limit).
+        r = await self._http.post(
+            f"/v1/sessions/{session_id}/events",
+            json={"events": events},
+        )
+        return json_or_empty(r)
 
-        Returns dict with keys: session, retrieved, send_result, events.
-        """
-        sess = SessionExamples._create_session(client, agent_id, environment_id)
-        try:
-            got = client.beta.sessions.retrieve(sess.id)
-            assert got.id == sess.id
-            page = client.beta.sessions.list()
-            assert any(s.id == sess.id for s in page)
+    async def list(
+        self,
+        session_id: str,
+        *,
+        limit: int | None = None,
+        order: str | None = None,
+        after_seq: int | None = None,
+        next_page: str | None = None,
+    ) -> dict:
+        params = _list_params(
+            limit=limit,
+            order=order,
+            after_seq=after_seq,
+            next_page=next_page,
+        )
+        r = await self._http.get(
+            f"/v1/sessions/{session_id}/events",
+            params=params,
+        )
+        return json_or_empty(r)
 
-            send_result = client.beta.sessions.events.send(
-                sess.id,
-                events=[{"type": "user.message", "content": "hello from sdk e2e"}],
+    async def stream(
+        self,
+        session_id: str,
+        *,
+        replay: bool = False,
+        timeout: float | None = None,
+    ) -> AsyncIterator[dict[str, Any]]:
+        """Tail a session's event log as a server-sent event stream."""
+        params: dict[str, Any] = {}
+        if replay:
+            params["replay"] = "1"
+
+        stream_kwargs: dict[str, Any] = {"params": params}
+        if timeout is not None:
+            stream_kwargs["timeout"] = timeout
+
+        async with self._http.stream(
+            "GET",
+            f"/v1/sessions/{session_id}/events/stream",
+            **stream_kwargs,
+        ) as resp:
+            raise_for_status(resp)
+            async for event in _iter_sse_events(resp):
+                yield event
+
+
+def _list_params(
+    *,
+    limit: int | None,
+    order: str | None,
+    after_seq: int | None,
+    next_page: str | None,
+) -> dict[str, Any]:
+    params: dict[str, Any] = {}
+    if limit is not None:
+        params["limit"] = limit
+    if order is not None:
+        params["order"] = order
+    if after_seq is not None:
+        params["after_seq"] = after_seq
+    if next_page is not None:
+        params["next_page"] = next_page
+    return params
+
+
+async def _iter_sse_events(resp: httpx.Response) -> AsyncIterator[dict[str, Any]]:
+    current_id: str | None = None
+    current_data: str | None = None
+
+    async for raw in resp.aiter_lines():
+        line = raw.rstrip("\r")
+        if not line:
+            if current_data is not None:
+                event = _parse_sse_event(current_id, current_data)
+                if event is not None:
+                    yield event
+            current_id = None
+            current_data = None
+            continue
+
+        if line.startswith(":"):
+            continue
+
+        if line.startswith("id:"):
+            current_id = line[3:].strip()
+        elif line.startswith("data:"):
+            chunk = line[5:]
+            if chunk.startswith(" "):
+                chunk = chunk[1:]
+            current_data = (
+                chunk if current_data is None else f"{current_data}\n{chunk}"
             )
-            assert send_result is not None
-            events = list(client.beta.sessions.events.list(sess.id))
-            assert isinstance(events, list)
-            return {"session": sess, "retrieved": got, "send_result": send_result, "events": events}
-        finally:
-            if not _KEEP:
-                client.beta.sessions.archive(sess.id)
-            else:
-                print(f"\n[KEEP] session {sess.id} left active — archive manually when done")
 
-    @staticmethod
-    def archive_session(
-        client: anthropic.Anthropic,
-        agent_id: str,
-        environment_id: str
-    ) -> dict:
-        """Create a session and archive it."""
-        sess = SessionExamples._create_session(client, agent_id, environment_id)
-        archived = client.beta.sessions.archive(sess.id)
-        assert archived.id == sess.id
-        return {"session": sess, "archived": archived}
 
-    @staticmethod
-    def delete_session(
-        client: anthropic.Anthropic,
-        agent_id: str,
-        environment_id: str
-    ) -> dict:
-        """Create a session, archive it, then delete it."""
-        sess = SessionExamples._create_session(client, agent_id, environment_id)
-        archived = client.beta.sessions.archive(sess.id)
-        deleted = client.beta.sessions.delete(sess.id)
-        return {"session": sess, "archived": archived, "deleted": deleted}
+def _iter_sse_events_sync(resp: httpx.Response) -> Iterator[dict[str, Any]]:
+    current_id: str | None = None
+    current_data: str | None = None
 
-    @staticmethod
-    def archive_and_delete(
-        client: anthropic.Anthropic,
-        agent_id: str,
-        environment_id: str
-    ) -> dict:
-        """
-        Create one session, archive it (assert), then delete it.
-        Combines archive + delete into a single session creation, keeping total
-        creations per test run to 2 (safely under the 5/60s server rate limit).
+    for raw in resp.iter_lines():
+        line = raw.rstrip("\r")
+        if not line:
+            if current_data is not None:
+                event = _parse_sse_event(current_id, current_data)
+                if event is not None:
+                    yield event
+            current_id = None
+            current_data = None
+            continue
 
-        Returns dict with keys: session, archived.
-        """
-        sess = SessionExamples._create_session(client, agent_id, environment_id)
-        archived = client.beta.sessions.archive(sess.id)
-        assert archived.id == sess.id
-        client.beta.sessions.delete(sess.id)
-        return {"session": sess, "archived": archived}
+        if line.startswith(":"):
+            continue
+
+        if line.startswith("id:"):
+            current_id = line[3:].strip()
+        elif line.startswith("data:"):
+            chunk = line[5:]
+            if chunk.startswith(" "):
+                chunk = chunk[1:]
+            current_data = (
+                chunk if current_data is None else f"{current_data}\n{chunk}"
+            )
+
+
+def _parse_sse_event(
+    event_id: str | None,
+    data: str,
+) -> dict[str, Any] | None:
+    try:
+        payload = json.loads(data)
+    except json.JSONDecodeError:
+        payload = {"_raw": data}
+
+    if not isinstance(payload, dict):
+        payload = {"_raw": payload}
+
+    if event_id is not None:
+        try:
+            payload.setdefault("seq", int(event_id))
+        except ValueError:
+            payload.setdefault("seq", event_id)
+    return payload

@@ -46,7 +46,7 @@ from pathlib import Path
 import pandas as pd
 
 from oma_sdk import OMAClient
-from oma_sdk.api import SubagentExamples, SessionExamples
+from oma_sdk.examples import SubagentExamples, SessionExamples
 
 
 # ---------------------------------------------------------------------------

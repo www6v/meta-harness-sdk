@@ -20,7 +20,7 @@ OMA SDK 现在支持在创建 agent 时指定不同的 harness 后端。harness 
 
 ```python
 from oma_sdk import OMAClient
-from oma_sdk.api.agents import AgentExamples
+from oma_sdk.examples.agents import AgentExamples
 
 # 初始化客户端
 client = OMAClient(
@@ -60,7 +60,7 @@ result = AgentExamples.create_and_retrieve(
 
 ```python
 # example/my_script_main.py
-from oma_sdk.api.agents import AgentExamples
+from oma_sdk.examples.agents import AgentExamples
 
 # 创建使用 hermes 的 agent
 agent = client.agents.create(

@@ -33,7 +33,7 @@ if str(_EXAMPLE_DIR) not in sys.path:
 
 from coordinate_team_soak import run_coordinate_team_soak
 from oma_sdk import OMAClient
-from oma_sdk.api.agents import MODEL as DEFAULT_MODEL
+from oma_sdk.examples.agents import MODEL as DEFAULT_MODEL
 
 OMA_BASE_URL = os.getenv("OMA_BASE_URL", "http://127.0.0.1:8787")
 os.environ.setdefault("OMA_API_KEY", "dev-key")

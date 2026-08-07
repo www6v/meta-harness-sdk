@@ -23,7 +23,7 @@
 | Go HTTP server | `../cmd/oma-server/main.go` | Listens `:8787`, chi router, SQLite |
 | Core API handlers | `../internal/api/*.go` | agents, sessions, environments, memory_stores, vaults, skills, dreams, evals, runtimes, integrations, model_cards, files |
 | `/v1/oma/*` aliases | `../internal/api/oma_aliases.go` | Mirrors select routes under alternate namespace |
-| Python SDK | `oma_sdk/` | `OMAClient` + resource classes + `oma_sdk/api/*` examples |
+| Python SDK | `oma_sdk/` | `OMAClient` + resource classes + `oma_sdk/examples/*` examples |
 | SDK tests | `tests/` | pytest + pytest-asyncio, live E2E against running server |
 | Python harness sidecar | `../harness/` | uv project, fastapi, httpx |
 | anthropic Python SDK | system pip | **0.111.0** — full `beta.*` managed-agents namespace |
@@ -235,7 +235,7 @@ These resources exist in **both** anthropic SDK and oma-platform, but OMA SDK de
 | `download` | `GET /v1/files/{id}/content?beta=true` | `GET /v1/files/{id}/content` | ✅ | |
 | `delete` | `DELETE /v1/files/{id}?beta=true` | `DELETE /v1/files/{id}` | ✅ | |
 
-**SDK binding:** `OMAClient.files` → `oma_sdk/resources/files.py` (httpx), not `client.beta.files`.
+**SDK binding:** `OMAClient.files` → `oma_sdk/api/files.py` (httpx), not `client.beta.files`.
 
 **Why httpx:** OMA accepts dual upload modes (multipart + base64 JSON), ties into session outputs via `scope_id`, and supports session-scoped file copies from `sessions.create(resources=[])`. Tests: `tests/test_files.py`; cookbook probe: `example/example1/data_analyst_agent.py`.
 
@@ -351,11 +351,11 @@ Reference: [platform.claude.com Python SDK](https://platform.claude.com/docs/en/
 - [x] **T1** `POST /v1/sessions/{id}/messages` — `sessions.go:236`
 - [x] **T2** `pyproject.toml` — uv project, anthropic>=0.111.0
 - [x] **T3** `oma_sdk/__init__.py` — `OMAClient`
-- [x] **T4** `oma_sdk/resources/*` — OMA-only resource classes
+- [x] **T4** `oma_sdk/api/*` — OMA-only resource classes
 - [x] **T5** `tests/conftest.py` — fixtures
 - [x] **T6–T11** E2E tests — agents, sessions, environments, memory_stores, vaults, skills
 - [x] **T12–T14** E2E tests — files, misc, subagents
-- [x] **Examples** — `oma_sdk/api/*`, cookbook probes `example/example1/` … `example/example3/`
+- [x] **Examples** — `oma_sdk/examples/*`, cookbook probes `example/example1/` … `example/example3/`
 
 ### Cookbook parity — data analyst (2026-06)
 
@@ -633,7 +633,7 @@ Test framework: `pytest` + `pytest-asyncio` (asyncio_mode=auto); live E2E agains
 |---|---|
 | Step 0: Scope | Accepted — gap analysis scoped to anthropic 0.111.0 vs current OMA routes; cookbook P0 tracked separately |
 | Architecture | 6 managed-agent resources via SDK; 9+ OMA-only via httpx — sound split; session create resources + outputs sync landed |
-| Code Quality | SDK implemented; examples in `oma_sdk/api/`; cookbook probes use thin launcher + `*_main.py` (`example/example1/`, `example/example2/`); legacy workaround in `example/example1/v1/` (deprecated) |
+| Code Quality | SDK implemented; examples in `oma_sdk/examples/`; cookbook probes use thin launcher + `*_main.py` (`example/example1/`, `example/example2/`); legacy workaround in `example/example1/v1/` (deprecated) |
 | Tests | pytest modules + Go cookbook tests (`TestDataAnalystCookbook`, `TestIterateCookbookMultiTurn`, `TestGateCookbook*`) + harness `test_custom_tools.py` |
 | Performance | SSE via anthropic SDK or `client.events.stream`; shared httpx pool in OMAClient |
 | NOT in scope | deployments, user_profiles, webhooks, messages, environments.work, cloud runtime |
