@@ -71,12 +71,14 @@ OUTCOME_CRITERIA = [
     "Exactly one concise sentence",
 ]
 USER_TASK = (
-    "Summarize our Q1 revenue trend in one sentence for the exec team."
+    "Summarize our Q1 revenue trend in one sentence for the exec team. "
+    "Q1 revenue was $4.2M, up 12% from Q4's $3.75M."
 )
 
 SYSTEM_PROMPT = (
     "You are a concise business analyst. Follow the user's formatting "
-    "requests exactly."
+    "requests exactly. When numbers are provided in the user message, "
+    "use them; do not ask for additional data files."
 )
 SCRIPT_DIR = Path(__file__).resolve().parent
 RUBRIC_PATH = SCRIPT_DIR / "rubric.md"

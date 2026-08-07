@@ -71,8 +71,8 @@ async def _gate_hitl_stream(_session_id: str):
 
 
 @pytest.mark.asyncio
-async def test_stream_hitl_one_reply_per_requires_action_idle() -> None:
-    """Sliding window: respond to at most one pending id per idle event."""
+async def test_stream_hitl_batches_pending_replies_per_idle() -> None:
+    """Anthropic cookbook: send all pending custom_tool_result ids together."""
 
     async def _stream(_session_id: str):
         yield _custom_tool_use(
@@ -113,7 +113,12 @@ async def test_stream_hitl_one_reply_per_requires_action_idle() -> None:
         ),
     )
 
-    assert client.events.send.await_count == 2
+    assert client.events.send.await_count == 1
+    batch = client.events.send.await_args_list[0].kwargs.get("events")
+    if batch is None:
+        batch = client.events.send.await_args_list[0].args[1]
+    assert len(batch) == 2
+    assert {row["custom_tool_use_id"] for row in batch} == {"ctu_a", "ctu_b"}
     assert state["responded_ids"] == {"ctu_a", "ctu_b"}
 
 

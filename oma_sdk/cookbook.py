@@ -133,6 +133,12 @@ def print_stream_event(
         print(f"{prefix}[custom:{name}]")
     elif ev_type == "session.error":
         msg = payload.get("message") or payload.get("error") or "session.error"
+        # Tool-schema validation errors are recoverable (agent may retry);
+        # do not abort the HITL/stream consumer for those.
+        msg_text = str(msg)
+        if "required property" in msg_text or "Failed validating" in msg_text:
+            print(f"\n[session.error] {msg_text}")
+            return
         raise RuntimeError(f"Session error: {msg}")
     elif ev_type == "session.status_terminated":
         raise RuntimeError("Session terminated before end_turn")
@@ -350,6 +356,8 @@ async def stream_hitl_until_end_turn(
     on_custom_tool: CustomToolHandler,
     config: StreamConfig | None = None,
     on_event: Callable[[dict[str, Any]], None] | None = None,
+    finish_when: Callable[[set[str], dict[str, dict[str, Any]]], bool]
+    | None = None,
 ) -> dict[str, Any]:
     """Stream a custom-tool HITL session until ``end_turn``.
 
@@ -359,6 +367,10 @@ async def stream_hitl_until_end_turn(
     ``stop_reason.event_ids``. The caller POSTs ``user.custom_tool_result``
     for each pending id, deduping across idle events, until a final
     ``end_turn`` idle arrives.
+
+    Optional ``finish_when(responded_ids, tool_use_events)`` may return True
+    after a tool result to send ``user.interrupt`` (stop agent re-entry loops
+    once the application decides the HITL task is complete).
 
     Returns a dict with ``responded_ids`` (set) for test assertions.
     """
@@ -418,9 +430,11 @@ async def stream_hitl_until_end_turn(
                         end_turn_seen.set()
                         return
                     if reason == "requires_action":
-                        # One custom_tool_result per idle (GT3 resume). Batching
-                        # multiple runTurn triggers while the prior turn is still
-                        # winding down can return 409 from the session machine.
+                        # Anthropic cookbook sends all pending custom_tool_result
+                        # events in one events.send; one-at-a-time is too slow
+                        # when the model batches many tool calls per turn.
+                        pending_results: list[dict[str, Any]] = []
+                        finished = False
                         for event_id in stop_reason_event_ids(payload):
                             if event_id in responded_to:
                                 continue
@@ -437,24 +451,39 @@ async def stream_hitl_until_end_turn(
                                 event_id,
                                 args,
                             )
+                            pending_results.append(
+                                {
+                                    "type": "user.custom_tool_result",
+                                    "custom_tool_use_id": event_id,
+                                    "content": [
+                                        {
+                                            "type": "text",
+                                            "text": json.dumps(result),
+                                        }
+                                    ],
+                                }
+                            )
+                            responded_to.add(event_id)
+                            if finish_when is not None and finish_when(
+                                responded_to,
+                                tool_use_events,
+                            ):
+                                finished = True
+                        if pending_results:
                             await _send_session_events_async(
                                 client,
                                 session_id,
-                                [
-                                    {
-                                        "type": "user.custom_tool_result",
-                                        "custom_tool_use_id": event_id,
-                                        "content": [
-                                            {
-                                                "type": "text",
-                                                "text": json.dumps(result),
-                                            }
-                                        ],
-                                    }
-                                ],
+                                pending_results,
                             )
-                            responded_to.add(event_id)
-                            break
+                        if finished:
+                            await _send_session_events_async(
+                                client,
+                                session_id,
+                                [{"type": "user.interrupt"}],
+                            )
+                            interrupted = True
+                            end_turn_seen.set()
+                            return
                     elif reason == "end_turn" and ev_seq > start_seq:
                         end_turn_seen.set()
                         return

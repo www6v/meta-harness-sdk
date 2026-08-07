@@ -116,14 +116,25 @@ GATE_TOOLS = [
     {
         "type": "custom",
         "name": "escalate",
-        "description": "Surface an ambiguous receipt for human review.",
+        "description": (
+            "Surface an ambiguous receipt for human review. "
+            "Pass the clarifying question in the 'question' field "
+            "(or 'prompt' as an alias)."
+        ),
         "input_schema": {
             "type": "object",
             "properties": {
                 "receipt_id": {"type": "string"},
-                "question": {"type": "string"},
+                "question": {
+                    "type": "string",
+                    "description": "Question for the human reviewer.",
+                },
+                "prompt": {
+                    "type": "string",
+                    "description": "Alias for question.",
+                },
             },
-            "required": ["receipt_id", "question"],
+            "required": ["receipt_id"],
         },
     },
 ]
@@ -191,11 +202,22 @@ def make_gate_handler(
         args: dict[str, Any],
     ) -> dict[str, Any]:
         receipt_id = str(args.get("receipt_id") or "")
+        if receipt_id and receipt_id in decisions:
+            return {
+                "already_finalized": True,
+                "hint": (
+                    "This receipt was already decided. Do not call "
+                    "decide/escalate for it again. If every receipt is "
+                    "done, stop without further tool calls."
+                ),
+            }
         if name == "decide":
             decisions[receipt_id] = {"lane": args.get("action"), **args}
             return {"recorded": True}
         if name == "escalate":
-            question = str(args.get("question") or "")
+            question = str(
+                args.get("question") or args.get("prompt") or ""
+            )
             human = simulate_human_review(receipt_id, question)
             decisions[receipt_id] = {
                 "lane": "escalated",
@@ -277,6 +299,7 @@ async def main() -> None:
 
         # Part A — HITL stream loop (Cookbook Cell 7)
         print("=== Part A: streaming HITL ===")
+        expected = int(os.getenv("OMA_GATE_EXPECT_DECISIONS", "12"))
         hitl_state = await stream_hitl_until_end_turn(
             client,
             session.id,
@@ -287,6 +310,7 @@ async def main() -> None:
                 }
             ],
             on_custom_tool=make_gate_handler(decisions),
+            finish_when=lambda _ids, _tools: len(decisions) >= expected,
             config=_stream_config(),
             on_event=lambda ev: print_stream_event(ev, preview_length=None),
         )
@@ -294,7 +318,6 @@ async def main() -> None:
             f"custom tool replies: {len(hitl_state.get('responded_ids', set()))}"
         )
 
-        expected = int(os.getenv("OMA_GATE_EXPECT_DECISIONS", "12"))
         if len(decisions) < expected:
             raise RuntimeError(
                 f"Expected {expected} receipt decisions, got {len(decisions)}. "

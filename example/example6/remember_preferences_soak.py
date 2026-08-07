@@ -35,26 +35,27 @@ def _stream_config() -> StreamConfig:
     )
 
 
-async def _memory_at_path(
+def _memory_at_path(
     client: OMAClient,
     store_id: str,
     path: str,
 ) -> str | None:
-    listed = await client._http.get(
-        f"/v1/memory_stores/{store_id}/memories",
-    )
-    listed.raise_for_status()
-    for row in listed.json().get("data") or []:
-        if row.get("path") != path:
+    """Read memory content via Anthropic-aligned ``client.memory_stores.memories``."""
+    for row in client.memory_stores.memories.list(store_id):
+        row_path = getattr(row, "path", None)
+        if row_path != path:
             continue
-        mem_id = row.get("id")
+        mem_id = getattr(row, "id", None)
         if not mem_id:
             continue
-        detail = await client._http.get(
-            f"/v1/memory_stores/{store_id}/memories/{mem_id}",
+        content = getattr(row, "content", None)
+        if isinstance(content, str) and content.strip():
+            return content
+        detail = client.memory_stores.memories.retrieve(
+            mem_id,
+            memory_store_id=store_id,
         )
-        detail.raise_for_status()
-        content = detail.json().get("content")
+        content = getattr(detail, "content", None)
         if isinstance(content, str) and content.strip():
             return content
     return None
@@ -109,7 +110,7 @@ async def run_remember_preferences_soak(
     )
     await wait_for_idle_status(client, session1.id, max_wait=cfg.idle_poll_max_wait)
 
-    saved_content = await _memory_at_path(client, store.id, PREFERENCE_PATH)
+    saved_content = _memory_at_path(client, store.id, PREFERENCE_PATH)
 
     session2 = client.sessions.create(
         environment_id=env.id,
@@ -130,7 +131,7 @@ async def run_remember_preferences_soak(
     )
     await wait_for_idle_status(client, session2.id, max_wait=cfg.idle_poll_max_wait)
 
-    recalled = await _memory_at_path(client, store.id, PREFERENCE_PATH)
+    recalled = _memory_at_path(client, store.id, PREFERENCE_PATH)
 
     if not keep_resources and os.getenv("OMA_KEEP_RESOURCES") != "1":
         client.sessions.archive(session1.id)
