@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Example: Create agents with different harness types.
 
@@ -18,8 +18,8 @@ import sys
 if sys.version_info < (3, 11):
     sys.exit("Python 3.11+ required")
 
-from oma_sdk import OMAClient
-from oma_sdk.examples.agents import _build_metadata, MODEL
+from sdk import OMAClient
+from sdk.examples.agents import _build_metadata, MODEL
 
 
 def create_agent_with_harness(client: OMAClient, harness_type: str, name: str) -> dict:

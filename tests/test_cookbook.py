@@ -1,10 +1,10 @@
-"""Unit tests for oma_sdk.cookbook helpers (no live server)."""
+﻿"""Unit tests for sdk.cookbook helpers (no live server)."""
 
 from __future__ import annotations
 
 import pytest
 
-from oma_sdk.cookbook import (
+from sdk.cookbook import (
     event_payload,
     event_type,
     print_stream_event,

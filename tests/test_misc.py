@@ -1,4 +1,4 @@
-"""E2E tests for oma-platform-only endpoints:
+﻿"""E2E tests for oma-platform-only endpoints:
   /v1/me, /v1/models/list, /v1/api_keys,
   /v1/integrations/{provider}/installations, /v1/dreams,
   /v1/cost_report, /v1/files
@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import anthropic
 
-from oma_sdk.examples import MiscExamples
+from sdk.examples import MiscExamples
 
 
 def test_me(client: anthropic.Anthropic):

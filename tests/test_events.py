@@ -1,4 +1,4 @@
-"""E2E tests for the OMA-native events API.
+﻿"""E2E tests for the OMA-native events API.
 
 These tests exercise the raw ``/v1/sessions/{id}/events*`` endpoints via
 ``OMAClient.events`` (an async httpx-backed resource). A real session is
@@ -15,12 +15,12 @@ import anthropic
 import pytest
 import pytest_asyncio
 
-from oma_sdk import (
+from sdk import (
     OMAClient,
     APIStatusError,
     BadRequestError,
 )
-from oma_sdk.examples import EventsExamples, SessionExamples
+from sdk.examples import EventsExamples, SessionExamples
 
 
 # ---------------------------------------------------------------------------

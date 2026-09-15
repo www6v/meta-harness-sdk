@@ -1,10 +1,10 @@
-"""E2E tests for /v1/vaults — CRUD + credentials."""
+﻿"""E2E tests for /v1/vaults — CRUD + credentials."""
 
 from __future__ import annotations
 
 import anthropic
 
-from oma_sdk.examples import VaultExamples
+from sdk.examples import VaultExamples
 
 
 def test_vaults_create_and_retrieve(client: anthropic.Anthropic):

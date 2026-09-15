@@ -1,4 +1,4 @@
-# OMA SDK cookbook parity examples
+﻿# OMA SDK cookbook parity examples
 
 Thin launchers pick Python 3.11+ via `_run_with_python3.py`; main logic lives in
 `*_main.py`.
@@ -17,7 +17,7 @@ Thin launchers pick Python 3.11+ via `_run_with_python3.py`; main logic lives in
 | OG5 EV charging live soak | `example4/outcome_grader_ev_charging.py` | `example4/outcome_grader_ev_charging_main.py` | `example4/ev_charging/` |
 | CT6 live soak | `example5/coordinate_team_live.py` | `example5/coordinate_team_live_main.py` | (same fixtures) |
 
-Shared streaming helpers: `oma_sdk.cookbook` (`stream_until_end_turn`,
+Shared streaming helpers: `sdk.cookbook` (`stream_until_end_turn`,
 `stream_hitl_until_end_turn`, `wait_for_idle_status`).
 
 Gate HITL CI: Go `TestGateCookbook*`; SDK `tests/test_gate_cookbook.py`; harness

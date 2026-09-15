@@ -1,4 +1,4 @@
-# oma-sdk
+﻿# oma-sdk
 
 > English: [README.md](./README.md)
 
@@ -38,7 +38,7 @@ export OMA_API_KEY=dev-key
 ```
 
 ```python
-from oma_sdk import OMAClient
+from sdk import OMAClient
 
 client = OMAClient()  # 读取 OMA_PLATFORM_URL，否则 http://localhost:8787
 agent = client.agents.create(
@@ -51,7 +51,7 @@ session = client.sessions.create(agent=agent.id)
 异步：
 
 ```python
-from oma_sdk import AsyncOMAClient
+from sdk import AsyncOMAClient
 
 async with AsyncOMAClient() as client:
     agent = await client.agents.create(
@@ -87,7 +87,7 @@ client = OMAClient(
 | Skills / files（httpx，CMA 形状） | `client.skills`、`client.files` | skills（含 versions）、files | 同步为主；`OMAClient` 保留 `*_async` 别名 |
 | OMA 专属（httpx） | `client.dreams`、`client.evals`、… | dreams、evals、runtimes、integrations、model_cards、cost_report、me、api_keys、models、events | 双客户端均提供 sync + async |
 
-Session 事件：`client.events`（便利层）；推荐主路径 `client.sessions.events`。Cookbook 流式辅助在 `oma_sdk.cookbook`。
+Session 事件：`client.events`（便利层）；推荐主路径 `client.sessions.events`。Cookbook 流式辅助在 `sdk.cookbook`。
 
 ## 示例
 
@@ -112,7 +112,7 @@ uv run pytest tests/ -x
 
 ```
 oma-sdk/
-├── oma_sdk/          # 包：OMAClient、AsyncOMAClient、resources、cookbook
+├── sdk/          # 包：OMAClient、AsyncOMAClient、resources、cookbook
 ├── example/          # Cookbook 对齐示例 1–10
 ├── tests/            # E2E pytest
 ├── gaia/             # GAIA 评测（可选）

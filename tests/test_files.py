@@ -1,4 +1,4 @@
-"""E2E tests for CMA-aligned FilesResource (sync primary + async variants)."""
+﻿"""E2E tests for CMA-aligned FilesResource (sync primary + async variants)."""
 
 from __future__ import annotations
 
@@ -7,8 +7,8 @@ import os
 
 import pytest
 
-from oma_sdk import OMAClient, NotFoundError
-from oma_sdk.examples import FileExamples
+from sdk import OMAClient, NotFoundError
+from sdk.examples import FileExamples
 
 
 @pytest.fixture

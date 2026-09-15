@@ -1,10 +1,10 @@
-"""Unit tests for OMA session-event flattening (no live server)."""
+﻿"""Unit tests for OMA session-event flattening (no live server)."""
 
 from __future__ import annotations
 
 from types import SimpleNamespace
 
-from oma_sdk.event_flatten import FlatteningEvents, flatten_session_event
+from sdk.event_flatten import FlatteningEvents, flatten_session_event
 
 
 def test_flatten_promotes_nested_content() -> None:
@@ -104,7 +104,7 @@ def test_flatten_already_flat_sse_payload() -> None:
 
 
 def test_iter_sse_data_lines_reads_type_from_json() -> None:
-    from oma_sdk.event_flatten import iter_sse_data_lines
+    from sdk.event_flatten import iter_sse_data_lines
 
     class FakeResponse:
         def iter_lines(self):

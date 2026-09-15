@@ -1,4 +1,4 @@
-"""MT1 — multi-turn same-session tests for iterate cookbook parity."""
+﻿"""MT1 — multi-turn same-session tests for iterate cookbook parity."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from oma_sdk.cookbook import (
+from sdk.cookbook import (
     StreamConfig,
     event_payload,
     event_type,

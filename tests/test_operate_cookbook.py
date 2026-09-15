@@ -1,4 +1,4 @@
-"""Operate in production cookbook tests."""
+﻿"""Operate in production cookbook tests."""
 
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ def test_operate_fixtures_constants() -> None:
     reason="set OMA_RUN_LIVE_OPERATE=1 for live operate soak",
 )
 async def test_operate_in_production_live_soak() -> None:
-    from oma_sdk import OMAClient
+    from sdk import OMAClient
     from operate_in_production_soak import run_operate_in_production_soak
 
     token = os.getenv("GITHUB_TOKEN", "")

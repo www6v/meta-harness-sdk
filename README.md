@@ -1,4 +1,4 @@
-# oma-sdk
+﻿# oma-sdk
 
 > 中文文档：[readme-zh.md](./readme-zh.md)
 
@@ -38,7 +38,7 @@ export OMA_API_KEY=dev-key
 ```
 
 ```python
-from oma_sdk import OMAClient
+from sdk import OMAClient
 
 client = OMAClient()  # OMA_PLATFORM_URL or http://localhost:8787
 agent = client.agents.create(
@@ -51,7 +51,7 @@ session = client.sessions.create(agent=agent.id)
 Async:
 
 ```python
-from oma_sdk import AsyncOMAClient
+from sdk import AsyncOMAClient
 
 async with AsyncOMAClient() as client:
     agent = await client.agents.create(
@@ -88,7 +88,7 @@ client.with_options(timeout=30.0).me.get()
 | Skills / files (httpx, CMA-shaped) | `client.skills`, `client.files` | skills (+ versions), files | sync primary; `*_async` aliases on `OMAClient` |
 | OMA-only (httpx) | `client.dreams`, `client.evals`, … | dreams, evals, runtimes, integrations, model_cards, cost_report, me, api_keys, models, events | sync + async on both clients |
 
-Session event helpers: `client.events` (`send` / `list` / `stream`) — OMA convenience layer; prefer `client.sessions.events` for Anthropic-shaped streaming. Cookbook streaming lives in `oma_sdk.cookbook`.
+Session event helpers: `client.events` (`send` / `list` / `stream`) — OMA convenience layer; prefer `client.sessions.events` for Anthropic-shaped streaming. Cookbook streaming lives in `sdk.cookbook`.
 
 ## Examples
 
@@ -113,7 +113,7 @@ uv run pytest tests/ -x
 
 ```
 oma-sdk/
-├── oma_sdk/          # package: OMAClient, AsyncOMAClient, resources, cookbook
+├── sdk/          # package: OMAClient, AsyncOMAClient, resources, cookbook
 ├── example/          # cookbook parity examples 1–10
 ├── tests/            # E2E pytest suite
 ├── gaia/             # GAIA evaluation runner (optional)

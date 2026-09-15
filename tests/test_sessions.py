@@ -1,4 +1,4 @@
-"""E2E tests for /v1/sessions — CRUD, events, archive, delete.
+﻿"""E2E tests for /v1/sessions — CRUD, events, archive, delete.
 
 Two tests, two session creations per run.  The server rate-limits session
 creation to 5 per 60 s; four separate tests (4 creations/run) exhausts the
@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import anthropic
 
-from oma_sdk.examples import SessionExamples, VaultExamples
+from sdk.examples import SessionExamples, VaultExamples
 
 
 def test_sessions_crud_and_events(client: anthropic.Anthropic, tmp_agent, tmp_env):

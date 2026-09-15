@@ -1,10 +1,10 @@
-"""E2E tests for /v1/memory_stores — CRUD + memories + memory_versions."""
+﻿"""E2E tests for /v1/memory_stores — CRUD + memories + memory_versions."""
 
 from __future__ import annotations
 
 import anthropic
 
-from oma_sdk.examples import MemoryStoreExamples
+from sdk.examples import MemoryStoreExamples
 
 
 def test_memory_stores_create_and_retrieve(client: anthropic.Anthropic):

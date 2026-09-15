@@ -1,4 +1,4 @@
-"""E2E tests for CMA-aligned SkillsResource + FilesResource sync API."""
+﻿"""E2E tests for CMA-aligned SkillsResource + FilesResource sync API."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ import zipfile
 
 import pytest
 
-from oma_sdk import OMAClient
-from oma_sdk.examples.skills import SkillExamples
+from sdk import OMAClient
+from sdk.examples.skills import SkillExamples
 
 
 @pytest.fixture

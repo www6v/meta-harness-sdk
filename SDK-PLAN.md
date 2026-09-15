@@ -1,4 +1,4 @@
-# OMA Platform Python SDK — Engineering Review & Implementation Plan
+﻿# OMA Platform Python SDK — Engineering Review & Implementation Plan
 
 > **Status (2026-08-06):** SDK client DX aligned with Anthropic Python SDK: `OMAClient` + `AsyncOMAClient`, `api_key`/`timeout`/`max_retries`/`with_options`, typed httpx errors, sync/async resource symmetry. Managed-agents resources route through `anthropic>=0.111.0` with `base_url`; OMA-only resources use `httpx` wrappers. E2E tests cover agents, sessions, environments, memory_stores, vaults, skills, files, misc, subagents. Wire-compat gaps **T15–T19** closed. **Cookbook parity (data analyst):** P0 + E1 closed. **Cookbook parity (iterate):** IF1–IF4 + MT1 closed. **Cookbook parity (gate HITL):** GT1–GT5 closed. **Cookbook parity (outcome grader):** OG1–OG3 closed — `example/example4/outcome_grader.py`.
 
@@ -23,7 +23,7 @@
 | Go HTTP server | `../cmd/oma-server/main.go` | Listens `:8787`, chi router, SQLite |
 | Core API handlers | `../internal/api/*.go` | agents, sessions, environments, memory_stores, vaults, skills, dreams, evals, runtimes, integrations, model_cards, files |
 | `/v1/oma/*` aliases | `../internal/api/oma_aliases.go` | Mirrors select routes under alternate namespace |
-| Python SDK | `oma_sdk/` | `OMAClient` + resource classes + `oma_sdk/examples/*` examples |
+| Python SDK | `sdk/` | `OMAClient` + resource classes + `sdk/examples/*` examples |
 | SDK tests | `tests/` | pytest + pytest-asyncio, live E2E against running server |
 | Python harness sidecar | `../harness/` | uv project, fastapi, httpx |
 | anthropic Python SDK | system pip | **0.111.0** — full `beta.*` managed-agents namespace |
@@ -93,7 +93,7 @@ All `client.beta.{agents,sessions,environments,memory_stores,vaults,skills}` cal
 | — | `/v1/stats` | ➕ | — | Console-only |
 | — | `/v1/tenants` | ➕ | via `client.me` | OMA extension |
 | — | `/v1/oauth`, `/v1/clawhub` | ➕ | — | Console / install flows |
-| — | `/v1/sessions/{id}/teams/*` | ➕ | `oma_sdk/subagent.py` | OMA multi-agent |
+| — | `/v1/sessions/{id}/teams/*` | ➕ | `sdk/subagent.py` | OMA multi-agent |
 | — | `/v1/sessions/{id}/trajectory` | ➕ | subagent helpers | OMA extension |
 | — | `/v1/sessions/{id}/outputs/*` | ➕ | — | Session artifact download |
 | — | `POST /v1/sessions/{id}/messages` | ➕ | raw httpx / server handler | OMA convenience (not in SDK) |
@@ -235,7 +235,7 @@ These resources exist in **both** anthropic SDK and oma-platform, but OMA SDK de
 | `download` | `GET /v1/files/{id}/content?beta=true` | `GET /v1/files/{id}/content` | ✅ | |
 | `delete` | `DELETE /v1/files/{id}?beta=true` | `DELETE /v1/files/{id}` | ✅ | |
 
-**SDK binding:** `OMAClient.files` → `oma_sdk/api/files.py` (httpx), not `client.beta.files`.
+**SDK binding:** `OMAClient.files` → `sdk/api/files.py` (httpx), not `client.beta.files`.
 
 **Why httpx:** OMA accepts dual upload modes (multipart + base64 JSON), ties into session outputs via `scope_id`, and supports session-scoped file copies from `sessions.create(resources=[])`. Tests: `tests/test_files.py`; cookbook probe: `example/example1/data_analyst_agent.py`.
 
@@ -278,7 +278,7 @@ These resources exist in **both** anthropic SDK and oma-platform, but OMA SDK de
 | `/v1/tenants` | POST / | via me | — |
 | `/v1/oauth/*` | authorize, callback, refresh | — | vault OAuth |
 | `/v1/clawhub/*` | search, install | — | skill marketplace |
-| `/v1/sessions/{id}/teams/*` | teams, messages, tasks, shutdown | `oma_sdk/subagent.py` | `tests/test_subagents.py` |
+| `/v1/sessions/{id}/teams/*` | teams, messages, tasks, shutdown | `sdk/subagent.py` | `tests/test_subagents.py` |
 | `/v1/sessions/{id}/trajectory` | GET | subagent helpers | `tests/test_subagents.py` |
 | `/v1/sessions/{id}/pending` | GET | — | harness polling |
 | `/v1/sessions/{id}/outputs/*` | list, download | — | Prefer `files.list(scope_id=session.id)` after turn sync |
@@ -350,12 +350,12 @@ Reference: [platform.claude.com Python SDK](https://platform.claude.com/docs/en/
 
 - [x] **T1** `POST /v1/sessions/{id}/messages` — `sessions.go:236`
 - [x] **T2** `pyproject.toml` — uv project, anthropic>=0.111.0
-- [x] **T3** `oma_sdk/__init__.py` — `OMAClient`
-- [x] **T4** `oma_sdk/api/*` — OMA-only resource classes
+- [x] **T3** `sdk/__init__.py` — `OMAClient`
+- [x] **T4** `sdk/api/*` — OMA-only resource classes
 - [x] **T5** `tests/conftest.py` — fixtures
 - [x] **T6–T11** E2E tests — agents, sessions, environments, memory_stores, vaults, skills
 - [x] **T12–T14** E2E tests — files, misc, subagents
-- [x] **Examples** — `oma_sdk/examples/*`, cookbook probes `example/example1/` … `example/example3/`
+- [x] **Examples** — `sdk/examples/*`, cookbook probes `example/example1/` … `example/example3/`
 
 ### Cookbook parity — data analyst (2026-06)
 
@@ -394,10 +394,10 @@ Reference: Anthropic `managed_agents/CMA_iterate_fix_failing_tests.ipynb` vs `ex
 
 | ID | Priority | Gap | Cookbook expects | OMA / SDK today | Recommendation |
 |---|---|---|---|---|---|
-| **IF1** | P1 | Stream-then-send ordering | `with client.beta.sessions.events.stream(...) as stream:` then `events.send` inside open SSE | `oma_sdk.cookbook.stream_until_end_turn` opens httpx SSE first, sends after connect delay, `replay=True` | ✅ SDK helper shipped; sync anthropic context manager still N/A |
-| **IF2** | P1 | Archive race after idle | `wait_for_idle_status()` polls `sessions.retrieve().status == "idle"` before `archive()` | `oma_sdk.cookbook.wait_for_idle_status` + called from both examples before archive | ✅ |
+| **IF1** | P1 | Stream-then-send ordering | `with client.beta.sessions.events.stream(...) as stream:` then `events.send` inside open SSE | `sdk.cookbook.stream_until_end_turn` opens httpx SSE first, sends after connect delay, `replay=True` | ✅ SDK helper shipped; sync anthropic context manager still N/A |
+| **IF2** | P1 | Archive race after idle | `wait_for_idle_status()` polls `sessions.retrieve().status == "idle"` before `archive()` | `sdk.cookbook.wait_for_idle_status` + called from both examples before archive | ✅ |
 | **IF3** | P1 | `end_turn` vs bare idle | Exit on `session.status_idle` **and** `stop_reason.type == "end_turn"` | `stream_until_end_turn` checks both; `data_analyst_agent.py` updated | ✅ |
-| **IF4** | P2 | Shared cookbook helpers | `from utilities import stream_until_end_turn, wait_for_idle_status` | `from oma_sdk import stream_until_end_turn, wait_for_idle_status` | ✅ |
+| **IF4** | P2 | Shared cookbook helpers | `from utilities import stream_until_end_turn, wait_for_idle_status` | `from sdk import stream_until_end_turn, wait_for_idle_status` | ✅ |
 | **MT1** | P2 | Multi-turn same session | Cell 15: second `user.message` + stream after first `end_turn` | Go `TestIterateCookbookMultiTurn` + pytest `test_iterate_cookbook.py` | ✅ |
 | **F1** | P2 | Files upload SDK path | `client.beta.files.upload(file=(name, bytes, mime))` | `client.files.upload` via httpx async (T20) | Optional `client.beta.files` alias |
 | **S1** | P0 | Session create `resources[]` | Mount calc.py + test_calc.py at create | ✅ closed 2026-06 | Parity probe asserts `len(session.resources) >= 2` |
@@ -414,11 +414,11 @@ Reference: Anthropic `managed_agents/CMA_iterate_fix_failing_tests.ipynb` vs `ex
 | Cell 5 environment | `client.environments.create` (`limited` networking) |
 | Cell 7 upload | `upload_fixture()` → `client.files.upload` |
 | Cell 9 session | `client.sessions.create(resources=[...])` |
-| Cell 11 stream+send | `oma_sdk.cookbook.stream_until_end_turn(..., send_events=[...])` |
+| Cell 11 stream+send | `sdk.cookbook.stream_until_end_turn(..., send_events=[...])` |
 | Cell 15 verify | second `events.send` + `stream_until_end_turn` |
 | Cell 17 archive | `wait_for_idle_status` + archive session/env/agent |
 
-SDK module: `oma_sdk/cookbook.py` — `stream_until_end_turn`, `wait_for_idle_status`, `StreamConfig`, event parsers. Tests: `tests/test_cookbook.py`, `tests/test_iterate_cookbook.py` (MT1). Go: `TestIterateCookbookMultiTurn` in `internal/api/` and `test/integration/`.
+SDK module: `sdk/cookbook.py` — `stream_until_end_turn`, `wait_for_idle_status`, `StreamConfig`, event parsers. Tests: `tests/test_cookbook.py`, `tests/test_iterate_cookbook.py` (MT1). Go: `TestIterateCookbookMultiTurn` in `internal/api/` and `test/integration/`.
 
 Fixtures: `sdk/example/example2/iterate/calc.py`, `test_calc.py` (from cookbook `example_data/iterate/`).
 
@@ -449,7 +449,7 @@ Reference: Anthropic `managed_agents/CMA_gate_human_in_the_loop.ipynb` vs `examp
 | Part A stream | `stream_hitl_until_end_turn(..., on_custom_tool=...)` |
 | Part B webhooks | print pointer to operate notebook |
 
-SDK: `oma_sdk/cookbook.py` — `stream_hitl_until_end_turn`, `stop_reason_event_ids`, `custom_tool_event_id`. Tests: `tests/test_gate_cookbook.py`. Go CI: `TestGateCookbookRequiresAction`, `TestGateCookbookHitlResume`, `TestGateCookbookSlidingWindow`, `TestGateCookbookDuplicateCustomToolResult`, `TestGateCookbookCustomToolResultIsError` (`.github/workflows/ci.yml`). Console: timeline pairing (`derive.ts`) + HITL reply panel (`session-detail/HitlActionPanel.tsx`, `hitl.ts`); session API exposes `pending_tool_calls`.
+SDK: `sdk/cookbook.py` — `stream_hitl_until_end_turn`, `stop_reason_event_ids`, `custom_tool_event_id`. Tests: `tests/test_gate_cookbook.py`. Go CI: `TestGateCookbookRequiresAction`, `TestGateCookbookHitlResume`, `TestGateCookbookSlidingWindow`, `TestGateCookbookDuplicateCustomToolResult`, `TestGateCookbookCustomToolResultIsError` (`.github/workflows/ci.yml`). Console: timeline pairing (`derive.ts`) + HITL reply panel (`session-detail/HitlActionPanel.tsx`, `hitl.ts`); session API exposes `pending_tool_calls`.
 
 Fixtures: `sdk/example/example3/gate/policy.yaml`, `gate/inbox/receipts.jsonl`.
 
@@ -577,7 +577,7 @@ Cookbook parity (Go server + SDK helpers):
 │   ├── CI: `.github/workflows/ci.yml` → `TestDataAnalystCookbook`
 │   └── E1 env packages: harness `env_packages.py` + `tests/test_env_packages.py`
 └── iterate fix failing tests ──────────────────── example/example2/iterate_fix_failing_tests.py ✅
-    ├── IF1–IF4: `oma_sdk/cookbook.py` + `tests/test_cookbook.py`
+    ├── IF1–IF4: `sdk/cookbook.py` + `tests/test_cookbook.py`
     ├── MT1: Go `TestIterateCookbookMultiTurn` + `tests/test_iterate_cookbook.py`
     └── S1/O1: shared with data analyst (session resources + outputs sync)
 └── gate human-in-the-loop ─────────────────────── example/example3/gate_human_in_the_loop.py ✅
@@ -633,7 +633,7 @@ Test framework: `pytest` + `pytest-asyncio` (asyncio_mode=auto); live E2E agains
 |---|---|
 | Step 0: Scope | Accepted — gap analysis scoped to anthropic 0.111.0 vs current OMA routes; cookbook P0 tracked separately |
 | Architecture | 6 managed-agent resources via SDK; 9+ OMA-only via httpx — sound split; session create resources + outputs sync landed |
-| Code Quality | SDK implemented; examples in `oma_sdk/examples/`; cookbook probes use thin launcher + `*_main.py` (`example/example1/`, `example/example2/`); legacy workaround in `example/example1/v1/` (deprecated) |
+| Code Quality | SDK implemented; examples in `sdk/examples/`; cookbook probes use thin launcher + `*_main.py` (`example/example1/`, `example/example2/`); legacy workaround in `example/example1/v1/` (deprecated) |
 | Tests | pytest modules + Go cookbook tests (`TestDataAnalystCookbook`, `TestIterateCookbookMultiTurn`, `TestGateCookbook*`) + harness `test_custom_tools.py` |
 | Performance | SSE via anthropic SDK or `client.events.stream`; shared httpx pool in OMAClient |
 | NOT in scope | deployments, user_profiles, webhooks, messages, environments.work, cloud runtime |

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Minimal AsyncOMAClient quickstart (Anthropic AsyncAnthropic-aligned DX).
 
 Requires a running oma-platform::
@@ -11,7 +11,7 @@ from __future__ import annotations
 import asyncio
 import os
 
-from oma_sdk import AsyncOMAClient
+from sdk import AsyncOMAClient
 
 OMA_BASE_URL = os.getenv("OMA_BASE_URL", "http://127.0.0.1:8787")
 os.environ.setdefault("OMA_API_KEY", "dev-key")

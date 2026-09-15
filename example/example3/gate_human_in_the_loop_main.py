@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Gate: human-in-the-loop with custom tools — OMA Managed Agents cookbook example.
@@ -22,7 +22,7 @@ Platform coverage (GT1–GT4): custom-tool registration, ``agent.custom_tool_use
 Prerequisites
 -------------
 * Python 3.11+
-* ``oma_sdk`` on PYTHONPATH or ``pip install -e sdk`` from oma-platform
+* ``sdk`` on PYTHONPATH or ``pip install -e sdk`` from oma-platform
 * OMA server + harness with a real LLM for live runs
 
 Usage::
@@ -50,14 +50,14 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from oma_sdk import (
+from sdk import (
     OMAClient,
     StreamConfig,
     print_stream_event,
     stream_hitl_until_end_turn,
     wait_for_idle_status,
 )
-from oma_sdk.examples.agents import MODEL as DEFAULT_MODEL
+from sdk.examples.agents import MODEL as DEFAULT_MODEL
 
 OMA_BASE_URL = os.getenv("OMA_BASE_URL", "http://127.0.0.1:8787")
 os.environ.setdefault("OMA_API_KEY", "dev-key")

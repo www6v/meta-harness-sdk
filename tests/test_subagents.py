@@ -1,4 +1,4 @@
-"""E2E tests for sub-agent configuration and session thread APIs."""
+﻿"""E2E tests for sub-agent configuration and session thread APIs."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ import anthropic
 import httpx
 import pytest
 
-from oma_sdk.examples import SubagentExamples
-from oma_sdk.subagent import (
+from sdk.examples import SubagentExamples
+from sdk.subagent import (
     DEMO_COORDINATOR_NAME,
     DEMO_WORKER_NAME,
     WORKER_REPLY_MARKER,

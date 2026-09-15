@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Verify with outcome grader — OMA Managed Agents cookbook example.
@@ -24,7 +24,7 @@ Set ``OMA_USE_FILE_RUBRIC=1`` to upload ``rubric.md`` and pass
 Prerequisites
 -------------
 * Python 3.11+
-* ``oma_sdk`` installed (``pip install -e sdk`` from oma-platform)
+* ``sdk`` installed (``pip install -e sdk`` from oma-platform)
 * OMA server + harness with a real LLM for live runs
 
 Usage::
@@ -48,12 +48,12 @@ import asyncio
 import os
 from pathlib import Path
 
-from oma_sdk import (
+from sdk import (
     OMAClient,
     stream_until_end_turn,
     wait_for_idle_status,
 )
-from oma_sdk.examples.agents import MODEL as DEFAULT_MODEL
+from sdk.examples.agents import MODEL as DEFAULT_MODEL
 
 OMA_BASE_URL = os.getenv("OMA_BASE_URL", "http://127.0.0.1:8787")
 os.environ.setdefault("OMA_API_KEY", "dev-key")

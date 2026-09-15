@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 SRE incident responder — OMA Managed Agents cookbook example.
@@ -28,8 +28,8 @@ if str(_EXAMPLE_DIR) not in sys.path:
     sys.path.insert(0, str(_EXAMPLE_DIR))
 
 from sre_incident_responder_soak import run_sre_incident_responder_soak
-from oma_sdk import OMAClient
-from oma_sdk.examples.agents import MODEL as DEFAULT_MODEL
+from sdk import OMAClient
+from sdk.examples.agents import MODEL as DEFAULT_MODEL
 
 OMA_BASE_URL = os.getenv("OMA_BASE_URL", "http://127.0.0.1:8787")
 os.environ.setdefault("OMA_API_KEY", "dev-key")

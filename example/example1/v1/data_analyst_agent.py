@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 DEPRECATED — see ../data_analyst_agent_main.py and ../v1/README.md.
 
@@ -7,7 +7,7 @@ Data Analyst Agent (OMA SDK) — script version.
 Mirrors the pattern from the Anthropic cookbook
 ``managed_agents/data_analyst_agent.ipynb``, reworked to drive the OMA platform
 (``agents``, ``environments``, ``sessions``, ``sessions.events``) via
-``oma_sdk``.
+``sdk``.
 
 What the agent does
 -------------------
@@ -32,7 +32,7 @@ The script is split in two parts:
 Prerequisites
 -------------
 * Python 3.10+
-* ``oma_sdk`` installed (ships with the OMA platform)
+* ``sdk`` installed (ships with the OMA platform)
 * ``pandas`` for the local reference analysis
 * An OMA server reachable at ``OMA_BASE_URL`` with a valid ``OMA_API_KEY``
 """
@@ -45,8 +45,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from oma_sdk import OMAClient
-from oma_sdk.examples import SubagentExamples, SessionExamples
+from sdk import OMAClient
+from sdk.examples import SubagentExamples, SessionExamples
 
 
 # ---------------------------------------------------------------------------

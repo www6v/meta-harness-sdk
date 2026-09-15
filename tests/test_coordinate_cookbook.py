@@ -1,4 +1,4 @@
-"""Coordinate specialist team cookbook — fixture and helper tests."""
+﻿"""Coordinate specialist team cookbook — fixture and helper tests."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from oma_sdk import OMAClient
-from oma_sdk.subagent import (
+from sdk import OMAClient
+from sdk.subagent import (
     COORDINATE_COMPLETE_MARKER,
     SPECIALIST_LIBRARIAN,
     SPECIALIST_PRICER,

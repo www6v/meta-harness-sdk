@@ -1,11 +1,11 @@
-"""
+﻿"""
 OMA Platform Python SDK.
 
 Usage:
     import os
     os.environ["OMA_API_KEY"] = "your-key"
 
-    from oma_sdk import OMAClient, AsyncOMAClient
+    from sdk import OMAClient, AsyncOMAClient
     client = OMAClient()                          # reads OMA_PLATFORM_URL, else http://localhost:8787
     client = OMAClient(base_url="http://...", api_key="...")
 

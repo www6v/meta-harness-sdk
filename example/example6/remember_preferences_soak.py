@@ -1,11 +1,11 @@
-"""RP live soak runner — remember user preferences cookbook."""
+﻿"""RP live soak runner — remember user preferences cookbook."""
 
 from __future__ import annotations
 
 import os
 from typing import Any
 
-from oma_sdk import OMAClient, StreamConfig, stream_until_end_turn, wait_for_idle_status
+from sdk import OMAClient, StreamConfig, stream_until_end_turn, wait_for_idle_status
 
 from remember_fixtures import (
     AGENT_NAME,

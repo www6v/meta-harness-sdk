@@ -1,13 +1,13 @@
-"""CT6 live soak runner — coordinate specialist team cookbook."""
+﻿"""CT6 live soak runner — coordinate specialist team cookbook."""
 
 from __future__ import annotations
 
 import os
 from typing import Any
 
-from oma_sdk import OMAClient, StreamConfig, stream_until_end_turn, wait_for_idle_status
-from oma_sdk.cookbook import event_payload, event_type
-from oma_sdk.subagent import (
+from sdk import OMAClient, StreamConfig, stream_until_end_turn, wait_for_idle_status
+from sdk.cookbook import event_payload, event_type
+from sdk.subagent import (
     SPECIALIST_LIBRARIAN,
     SPECIALIST_PRICER,
     SPECIALIST_RESEARCHER,

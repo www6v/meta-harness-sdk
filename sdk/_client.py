@@ -1,4 +1,4 @@
-"""OMA sync/async clients aligned with Anthropic / AsyncAnthropic DX."""
+﻿"""OMA sync/async clients aligned with Anthropic / AsyncAnthropic DX."""
 
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ from .api.runtimes import RuntimesResource
 from .api.sessions import SessionEventsResource
 from .api.skills import SkillsResource
 
-logger = logging.getLogger("oma_sdk")
+logger = logging.getLogger("sdk")
 
 DEFAULT_BASE_URL = "http://localhost:8787"
 DEFAULT_TIMEOUT = 120.0
@@ -51,7 +51,7 @@ def _configure_logging() -> None:
     if not logger.handlers:
         handler = logging.StreamHandler()
         handler.setFormatter(
-            logging.Formatter("[oma_sdk] %(levelname)s %(message)s")
+            logging.Formatter("[sdk] %(levelname)s %(message)s")
         )
         logger.addHandler(handler)
     logger.setLevel(level)

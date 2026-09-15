@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Build a data analyst agent with OMA Managed Agents.
@@ -24,7 +24,7 @@ platform gap rather than a missing workaround in the example.
 Prerequisites
 -------------
 * Python 3.11+
-* ``oma_sdk`` installed (``pip install -e sdk`` from oma-platform)
+* ``sdk`` installed (``pip install -e sdk`` from oma-platform)
 * OMA server at ``OMA_BASE_URL`` with ``OMA_API_KEY``
 * Harness with pandas/plotly: set ``packages.pip`` on the environment (E1 —
   harness installs at turn time), or start harness with
@@ -59,8 +59,8 @@ import io
 import os
 from pathlib import Path
 
-from oma_sdk import OMAClient, StreamConfig, stream_until_end_turn, wait_for_idle_status
-from oma_sdk.examples.agents import MODEL as DEFAULT_MODEL
+from sdk import OMAClient, StreamConfig, stream_until_end_turn, wait_for_idle_status
+from sdk.examples.agents import MODEL as DEFAULT_MODEL
 
 # ---------------------------------------------------------------------------
 # Cookbook mapping: notebook Cell 2 (setup)

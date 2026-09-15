@@ -1,4 +1,4 @@
-"""Outcome grader cookbook tests — fixtures (CI) + live EV soak (opt-in)."""
+﻿"""Outcome grader cookbook tests — fixtures (CI) + live EV soak (opt-in)."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from oma_sdk import OMAClient
+from sdk import OMAClient
 
 _EXAMPLE4 = Path(__file__).resolve().parents[1] / "example" / "example4"
 if str(_EXAMPLE4) not in sys.path:

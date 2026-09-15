@@ -1,11 +1,11 @@
-"""SRE live soak runner — incident responder cookbook."""
+﻿"""SRE live soak runner — incident responder cookbook."""
 
 from __future__ import annotations
 
 import os
 from typing import Any
 
-from oma_sdk import OMAClient, StreamConfig, stream_hitl_until_end_turn, wait_for_idle_status
+from sdk import OMAClient, StreamConfig, stream_hitl_until_end_turn, wait_for_idle_status
 
 from sre_fixtures import (
     AGENT_NAME,

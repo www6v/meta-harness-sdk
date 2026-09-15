@@ -1,4 +1,4 @@
-# Harness 支持实现 - 测试报告
+﻿# Harness 支持实现 - 测试报告
 
 ## 测试执行时间
 2026-07-12
@@ -6,7 +6,7 @@
 ## 测试环境
 - Python: 3.13.5
 - OMA Server: http://127.0.0.1:8787
-- SDK: oma_sdk (本地开发版本)
+- SDK: sdk (本地开发版本)
 
 ## 测试结果
 
@@ -52,7 +52,7 @@
 ## 代码修改清单
 
 ### 核心文件
-- ✅ `oma_sdk/examples/agents.py` - 添加 harness 参数支持
+- ✅ `sdk/examples/agents.py` - 添加 harness 参数支持
 - ✅ 添加 `_build_metadata()` 辅助函数
 - ✅ 添加 `HarnessType` 类型定义
 - ✅ 更新 5 个方法签名（create_and_retrieve, update_agent, list_agent_versions, archive_agent, delete_agent）
@@ -73,8 +73,8 @@
 ### 基础用法
 
 ```python
-from oma_sdk import OMAClient
-from oma_sdk.examples.agents import _build_metadata, MODEL
+from sdk import OMAClient
+from sdk.examples.agents import _build_metadata, MODEL
 import os
 
 os.environ.setdefault("OMA_API_KEY", "dev-key")

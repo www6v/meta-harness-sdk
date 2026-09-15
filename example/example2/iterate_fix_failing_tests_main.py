@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Iterate: do → observe → fix — OMA Managed Agents parity probe.
@@ -24,7 +24,7 @@ not a missing workaround. See ``sdk/SDK-PLAN.md`` § Cookbook parity — iterate
 Prerequisites
 -------------
 * Python 3.11+
-* ``oma_sdk`` installed (``pip install -e sdk`` from oma-platform)
+* ``sdk`` installed (``pip install -e sdk`` from oma-platform)
 * OMA server at ``OMA_BASE_URL`` with ``OMA_API_KEY`` and harness running
 
 Usage::
@@ -54,14 +54,14 @@ import io
 import os
 from pathlib import Path
 
-from oma_sdk import (
+from sdk import (
     OMAClient,
     StreamConfig,
     print_stream_event,
     stream_until_end_turn,
     wait_for_idle_status,
 )
-from oma_sdk.examples.agents import MODEL as DEFAULT_MODEL
+from sdk.examples.agents import MODEL as DEFAULT_MODEL
 
 # ---------------------------------------------------------------------------
 # Cookbook mapping: notebook Cell 1 (setup)

@@ -1,4 +1,4 @@
-"""E2E tests for /v1/environments."""
+﻿"""E2E tests for /v1/environments."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import time
 import anthropic
 import pytest
 
-from oma_sdk.examples import EnvironmentExamples
+from sdk.examples import EnvironmentExamples
 
 
 def test_environments_create_and_retrieve(client: anthropic.Anthropic):

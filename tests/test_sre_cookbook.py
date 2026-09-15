@@ -1,4 +1,4 @@
-"""SRE incident responder cookbook tests."""
+﻿"""SRE incident responder cookbook tests."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ _RUN_LIVE = os.getenv("OMA_RUN_LIVE_SRE", "0") == "1"
 
 @pytest.fixture
 async def oma_client():
-    from oma_sdk import OMAClient
+    from sdk import OMAClient
 
     client = OMAClient(base_url=os.getenv("OMA_BASE_URL", "http://localhost:8787"))
     yield client

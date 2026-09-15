@@ -1,4 +1,4 @@
-"""Map httpx responses to Anthropic-style typed API errors."""
+﻿"""Map httpx responses to Anthropic-style typed API errors."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ from anthropic import (
     UnprocessableEntityError,
 )
 
-# Re-export for ``from oma_sdk import NotFoundError`` convenience.
+# Re-export for ``from sdk import NotFoundError`` convenience.
 __all__ = [
     "APIConnectionError",
     "APIError",

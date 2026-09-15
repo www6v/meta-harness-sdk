@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Built-in agent memory — end-to-end test case (Hermes-parity memory).
 
@@ -26,7 +26,7 @@ Configuration (all via environment variables)::
 Example::
 
     OMA_API_KEY=oma_xxx OMA_BASE_URL=http://127.0.0.1:8787 \\
-        python oma_sdk/examples/builtin_memory_test.py
+        python sdk/examples/builtin_memory_test.py
 
 Named API keys are bound to their own tenant server-side, so resources land
 in the console workspace of the key's owner automatically; the global dev
@@ -52,9 +52,9 @@ import httpx
 if sys.version_info < (3, 11):
     sys.exit("Python 3.11+ required")
 
-from oma_sdk import OMAClient, StreamConfig, stream_until_end_turn, wait_for_idle_status
-from oma_sdk.cookbook import event_payload, event_type, message_text, print_stream_event
-from oma_sdk.examples.agents import MODEL as DEFAULT_MODEL
+from sdk import OMAClient, StreamConfig, stream_until_end_turn, wait_for_idle_status
+from sdk.cookbook import event_payload, event_type, message_text, print_stream_event
+from sdk.examples.agents import MODEL as DEFAULT_MODEL
 
 OMA_BASE_URL = os.getenv("OMA_BASE_URL", "http://127.0.0.1:8787")
 API_KEY = os.getenv("OMA_API_KEY", "dev-key")

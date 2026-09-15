@@ -1,4 +1,4 @@
-"""Gate HITL cookbook — stream_hitl_until_end_turn unit tests."""
+﻿"""Gate HITL cookbook — stream_hitl_until_end_turn unit tests."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from oma_sdk.cookbook import (
+from sdk.cookbook import (
     StreamConfig,
     custom_tool_event_id,
     stop_reason_event_ids,
@@ -215,7 +215,7 @@ async def test_stream_hitl_stops_on_user_interrupt() -> None:
 
     sent: list[list[dict[str, Any]]] = []
 
-    import oma_sdk.cookbook as cookbook
+    import sdk.cookbook as cookbook
 
     original = cookbook._send_session_events_async
     cookbook._send_session_events_async = AsyncMock(

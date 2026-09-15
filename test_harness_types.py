@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Test script to demonstrate different harness types support in agent creation.
 
@@ -17,8 +17,8 @@ import sys
 # Add SDK to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from oma_sdk import OMAClient
-from oma_sdk.examples.agents import _build_metadata, MODEL
+from sdk import OMAClient
+from sdk.examples.agents import _build_metadata, MODEL
 
 
 def test_harness_types():

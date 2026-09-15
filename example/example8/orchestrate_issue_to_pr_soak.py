@@ -1,11 +1,11 @@
-"""OR live soak runner — orchestrate issue to PR cookbook."""
+﻿"""OR live soak runner — orchestrate issue to PR cookbook."""
 
 from __future__ import annotations
 
 import os
 from typing import Any
 
-from oma_sdk import OMAClient, StreamConfig, stream_until_end_turn, wait_for_idle_status
+from sdk import OMAClient, StreamConfig, stream_until_end_turn, wait_for_idle_status
 
 from orchestrate_fixtures import (
     AGENT_NAME,

@@ -1,4 +1,4 @@
-# `decide()` / `escalate()` 自定义工具在 OMA 中的定义与流转
+﻿# `decide()` / `escalate()` 自定义工具在 OMA 中的定义与流转
 
 本文说明 `gate_human_in_the_loop_main.py` 中 `decide()` 和 `escalate()` 在 OMA 系统里是如何定义、注册与执行的。
 
@@ -204,7 +204,7 @@ def make_gate_handler(
     return handle_custom_tool
 ```
 
-`stream_hitl_until_end_turn()` 在收到 `requires_action` 时调用该回调，再 POST `user.custom_tool_result`（`sdk/oma_sdk/cookbook.py`）：
+`stream_hitl_until_end_turn()` 在收到 `requires_action` 时调用该回调，再 POST `user.custom_tool_result`（`sdk/sdk/cookbook.py`）：
 
 ```python
 if reason == "requires_action":
@@ -300,7 +300,7 @@ sequenceDiagram
 | `harness/oma_adapter/emit.py` | `agent.custom_tool_use` 事件发射 |
 | `harness/oma_adapter/turn.py` | Turn 内 custom tool 注册与 pending 返回 |
 | `harness/oma_adapter/extensions/custom_tools.py` | piPy extension 入口 |
-| `sdk/oma_sdk/cookbook.py` | `stream_hitl_until_end_turn` HITL 循环 |
+| `sdk/sdk/cookbook.py` | `stream_hitl_until_end_turn` HITL 循环 |
 | `internal/harness/pending_custom_tools.go` | `requires_action` idle 构建 |
 | `internal/session/custom_tool_promote.go` | `user.custom_tool_result` → `agent.tool_result` |
 | `docs/sdk-migrate/gate-hitl-gt1-gt3-migration.md` | GT1–GT3 迁移与架构说明 |

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """GAIA Level-1 benchmark runner for oma-platform.
 
 Reads the GAIA validation metadata parquet, picks every Level-1 question,
@@ -38,7 +38,7 @@ import httpx
 
 # Add SDK to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from oma_sdk import OMAClient, stream_until_end_turn, StreamConfig, stop_reason_type, event_type, message_text
+from sdk import OMAClient, stream_until_end_turn, StreamConfig, stop_reason_type, event_type, message_text
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -129,7 +129,7 @@ def _stop_reason_type(evt: dict[str, Any]) -> str | None:
     ``{"type": "end_turn"}`` or ``{"type": "requires_action", ...}``.
     Returns None when stop_reason is missing or not a dict.
 
-    Parity with ``oma-platform/sdk/oma_sdk/cookbook.py::stop_reason_type``.
+    Parity with ``oma-platform/sdk/sdk/cookbook.py::stop_reason_type``.
     """
     stop_reason = evt.get("stop_reason")
     if isinstance(stop_reason, dict):

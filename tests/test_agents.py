@@ -1,10 +1,10 @@
-"""E2E tests for /v1/agents."""
+﻿"""E2E tests for /v1/agents."""
 
 from __future__ import annotations
 
 import anthropic
 
-from oma_sdk.examples import AgentExamples
+from sdk.examples import AgentExamples
 
 
 def test_agents_create_and_retrieve(client: anthropic.Anthropic):

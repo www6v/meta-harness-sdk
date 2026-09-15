@@ -1,4 +1,4 @@
-"""
+﻿"""
 Sub-agent Examples — helpers for multi-agent coordinator setup and observability.
 
 Reference: open-managed-agents ``test/eval/runner.ts`` (subAgents → callable_agents)
@@ -15,7 +15,7 @@ from urllib.parse import urlparse
 
 import httpx
 
-from oma_sdk.subagent import (
+from sdk.subagent import (
     DEFAULT_MODEL,
     DEFAULT_TOOLS,
     DEMO_COORDINATOR_NAME,

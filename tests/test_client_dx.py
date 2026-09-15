@@ -1,4 +1,4 @@
-"""Unit tests for OMAClient / AsyncOMAClient DX (no live platform required)."""
+﻿"""Unit tests for OMAClient / AsyncOMAClient DX (no live platform required)."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ import httpx
 import pytest
 from anthropic import AnthropicError
 
-from oma_sdk import AsyncOMAClient, NotFoundError, OMAClient
-from oma_sdk._exceptions import make_status_error, raise_for_status
+from sdk import AsyncOMAClient, NotFoundError, OMAClient
+from sdk._exceptions import make_status_error, raise_for_status
 
 
 def test_missing_api_key_raises(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -78,7 +78,7 @@ def test_oma_log_env_configures_logger(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("OMA_API_KEY", "dev-key")
     client = OMAClient(base_url="http://127.0.0.1:8787", api_key="dev-key")
     try:
-        logger = logging.getLogger("oma_sdk")
+        logger = logging.getLogger("sdk")
         assert logger.level == logging.DEBUG
     finally:
         client.close()

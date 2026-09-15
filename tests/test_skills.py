@@ -1,4 +1,4 @@
-"""E2E tests for /v1/skills — list + upload + retrieve + delete + multi-skill use."""
+﻿"""E2E tests for /v1/skills — list + upload + retrieve + delete + multi-skill use."""
 
 from __future__ import annotations
 
@@ -7,8 +7,8 @@ import os
 import anthropic
 import pytest
 
-from oma_sdk.examples.skills import UPLOADED_SKILL_TITLES
-from oma_sdk.examples import SkillExamples
+from sdk.examples.skills import UPLOADED_SKILL_TITLES
+from sdk.examples import SkillExamples
 
 _RUN_LIVE_MULTI = os.getenv("OMA_RUN_LIVE_MULTI_SKILLS", "0") == "1"
 
