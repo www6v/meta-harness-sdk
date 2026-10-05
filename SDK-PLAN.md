@@ -329,7 +329,7 @@ These resources exist in **both** anthropic SDK and oma-platform, but OMA SDK de
 
 Reference: [platform.claude.com Python SDK](https://platform.claude.com/docs/en/cli-sdks-libraries/sdks/python).
 
-| Capability | Anthropic SDK | oma-sdk target | Status |
+| Capability | Anthropic SDK | meta-harness-sdk target | Status |
 |---|---|---|---|
 | Sync client | `Anthropic` | `OMAClient` | ✅ |
 | Async client | `AsyncAnthropic` | `AsyncOMAClient` | ✅ |

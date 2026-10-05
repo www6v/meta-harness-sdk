@@ -1,4 +1,4 @@
-﻿# oma-sdk
+﻿# meta-harness-sdk
 
 > 中文文档：[readme-zh.md](./readme-zh.md)
 
@@ -23,7 +23,7 @@ Use this package to call the platform HTTP API from Python: create agents/sessio
 Python **≥ 3.11**. Local install only (not published to PyPI yet).
 
 ```bash
-cd oma-sdk
+cd meta-harness-sdk
 uv sync
 # or: pip install -e .
 ```
@@ -112,7 +112,7 @@ uv run pytest tests/ -x
 ## Layout
 
 ```
-oma-sdk/
+meta-harness-sdk/
 ├── sdk/          # package: OMAClient, AsyncOMAClient, resources, cookbook
 ├── example/          # cookbook parity examples 1–10
 ├── tests/            # E2E pytest suite
@@ -125,7 +125,7 @@ oma-sdk/
 
 ```
 ┌────────────────────┐         HTTP + SSE          ┌─────────────────────┐
-│  oma-sdk (Python)  │ ──────────────────────────► │  oma-platform :8787 │
+│  meta-harness-sdk (Python)  │ ──────────────────────────► │  oma-platform :8787 │
 │  OMAClient         │                             │  Go server + Console │
 └────────────────────┘                             └──────────┬──────────┘
                                                               │ /internal/turn
@@ -137,10 +137,10 @@ oma-sdk/
 ```
 
 - **oma-platform** — server, harness, Console, auth
-- **oma-sdk** — Python client for that platform (this repo)
+- **meta-harness-sdk** — Python client for that platform (this repo)
 
 See also: [`SDK-PLAN.md`](./SDK-PLAN.md), [`HARNESS_SUPPORT.md`](./HARNESS_SUPPORT.md).
 
 ## Version
 
-`oma-sdk` **v0.1.0** (`pyproject.toml`).
+`meta-harness-sdk` **v0.1.0** (`pyproject.toml`).

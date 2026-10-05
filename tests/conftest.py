@@ -1,5 +1,5 @@
 """
-E2E test fixtures for oma-sdk.
+E2E test fixtures for meta-harness-sdk.
 
 All tests hit a real oma-platform server using the anthropic Python SDK.
 Set OMA_BASE_URL and OMA_API_KEY, or place them in oma-platform/.env (auto-loaded).

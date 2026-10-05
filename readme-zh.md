@@ -1,4 +1,4 @@
-﻿# oma-sdk
+﻿# meta-harness-sdk
 
 > English: [README.md](./README.md)
 
@@ -23,7 +23,7 @@
 Python **≥ 3.11**。目前仅支持本地安装（尚未发布到 PyPI）。
 
 ```bash
-cd oma-sdk
+cd meta-harness-sdk
 uv sync
 # 或: pip install -e .
 ```
@@ -111,7 +111,7 @@ uv run pytest tests/ -x
 ## 目录结构
 
 ```
-oma-sdk/
+meta-harness-sdk/
 ├── sdk/          # 包：OMAClient、AsyncOMAClient、resources、cookbook
 ├── example/          # Cookbook 对齐示例 1–10
 ├── tests/            # E2E pytest
@@ -124,7 +124,7 @@ oma-sdk/
 
 ```
 ┌────────────────────┐         HTTP + SSE          ┌─────────────────────┐
-│  oma-sdk (Python)  │ ──────────────────────────► │  oma-platform :8787 │
+│  meta-harness-sdk (Python)  │ ──────────────────────────► │  oma-platform :8787 │
 │  OMAClient         │                             │  Go 服务 + Console   │
 └────────────────────┘                             └──────────┬──────────┘
                                                               │ /internal/turn
@@ -136,10 +136,10 @@ oma-sdk/
 ```
 
 - **oma-platform** — 服务端、harness、Console、鉴权
-- **oma-sdk** — 面向该平台的 Python 客户端（本仓库）
+- **meta-harness-sdk** — 面向该平台的 Python 客户端（本仓库）
 
 另见：[`SDK-PLAN.md`](./SDK-PLAN.md)、[`HARNESS_SUPPORT.md`](./HARNESS_SUPPORT.md)。
 
 ## 版本
 
-`oma-sdk` **v0.1.0**（`pyproject.toml`）。
+`meta-harness-sdk` **v0.1.0**（`pyproject.toml`）。
