@@ -1,4 +1,4 @@
-﻿# meta-harness-sdk
+# meta-harness-sdk
 
 > English: [README.md](./README.md)
 

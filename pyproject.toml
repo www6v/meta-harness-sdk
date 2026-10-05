@@ -1,4 +1,4 @@
-﻿[project]
+[project]
 name = "meta-harness-sdk"
 version = "0.1.0"
 description = "Python SDK for oma-platform — validates all APIs using the Anthropic SDK with custom base_url"

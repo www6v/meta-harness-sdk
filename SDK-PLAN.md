@@ -1,4 +1,4 @@
-﻿# OMA Platform Python SDK — Engineering Review & Implementation Plan
+# OMA Platform Python SDK — Engineering Review & Implementation Plan
 
 > **Status (2026-08-06):** SDK client DX aligned with Anthropic Python SDK: `OMAClient` + `AsyncOMAClient`, `api_key`/`timeout`/`max_retries`/`with_options`, typed httpx errors, sync/async resource symmetry. Managed-agents resources route through `anthropic>=0.111.0` with `base_url`; OMA-only resources use `httpx` wrappers. E2E tests cover agents, sessions, environments, memory_stores, vaults, skills, files, misc, subagents. Wire-compat gaps **T15–T19** closed. **Cookbook parity (data analyst):** P0 + E1 closed. **Cookbook parity (iterate):** IF1–IF4 + MT1 closed. **Cookbook parity (gate HITL):** GT1–GT5 closed. **Cookbook parity (outcome grader):** OG1–OG3 closed — `example/example4/outcome_grader.py`.
 

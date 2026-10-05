@@ -1,4 +1,4 @@
-﻿# meta-harness-sdk
+# meta-harness-sdk
 
 > 中文文档：[readme-zh.md](./readme-zh.md)
 
