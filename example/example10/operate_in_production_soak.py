@@ -1,4 +1,4 @@
-﻿"""Operate in production live soak runner."""
+"""Operate in production live soak runner."""
 
 from __future__ import annotations
 

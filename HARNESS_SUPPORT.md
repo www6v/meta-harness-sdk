@@ -1,4 +1,4 @@
-﻿# Agent Harness 支持文档
+# Agent Harness 支持文档
 
 ## 概述
 

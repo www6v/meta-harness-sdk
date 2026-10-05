@@ -1,4 +1,4 @@
-﻿"""OR live soak runner — orchestrate issue to PR cookbook."""
+"""OR live soak runner — orchestrate issue to PR cookbook."""
 
 from __future__ import annotations
 

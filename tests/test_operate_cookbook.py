@@ -1,4 +1,4 @@
-﻿"""Operate in production cookbook tests."""
+"""Operate in production cookbook tests."""
 
 from __future__ import annotations
 

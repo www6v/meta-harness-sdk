@@ -1,4 +1,4 @@
-﻿"""Orchestrate issue to PR cookbook tests."""
+"""Orchestrate issue to PR cookbook tests."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-﻿"""E2E tests for CMA-aligned FilesResource (sync primary + async variants)."""
+"""E2E tests for CMA-aligned FilesResource (sync primary + async variants)."""
 
 from __future__ import annotations
 

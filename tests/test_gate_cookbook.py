@@ -1,4 +1,4 @@
-﻿"""Gate HITL cookbook — stream_hitl_until_end_turn unit tests."""
+"""Gate HITL cookbook — stream_hitl_until_end_turn unit tests."""
 
 from __future__ import annotations
 

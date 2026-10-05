@@ -1,4 +1,4 @@
-﻿"""E2E tests for /v1/skills — list + upload + retrieve + delete + multi-skill use."""
+"""E2E tests for /v1/skills — list + upload + retrieve + delete + multi-skill use."""
 
 from __future__ import annotations
 

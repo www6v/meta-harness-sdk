@@ -1,4 +1,4 @@
-﻿"""RP live soak runner — remember user preferences cookbook."""
+"""RP live soak runner — remember user preferences cookbook."""
 
 from __future__ import annotations
 

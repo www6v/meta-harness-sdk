@@ -1,4 +1,4 @@
-﻿"""E2E tests for the OMA-native events API.
+"""E2E tests for the OMA-native events API.
 
 These tests exercise the raw ``/v1/sessions/{id}/events*`` endpoints via
 ``OMAClient.events`` (an async httpx-backed resource). A real session is

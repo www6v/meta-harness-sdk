@@ -1,4 +1,4 @@
-﻿"""OMA sync/async clients aligned with Anthropic / AsyncAnthropic DX."""
+"""OMA sync/async clients aligned with Anthropic / AsyncAnthropic DX."""
 
 from __future__ import annotations
 

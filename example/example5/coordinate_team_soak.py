@@ -1,4 +1,4 @@
-﻿"""CT6 live soak runner — coordinate specialist team cookbook."""
+"""CT6 live soak runner — coordinate specialist team cookbook."""
 
 from __future__ import annotations
 

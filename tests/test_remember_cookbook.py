@@ -1,4 +1,4 @@
-﻿"""Remember preferences cookbook tests."""
+"""Remember preferences cookbook tests."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-﻿"""Unit tests for sdk.cookbook helpers (no live server)."""
+"""Unit tests for sdk.cookbook helpers (no live server)."""
 
 from __future__ import annotations
 

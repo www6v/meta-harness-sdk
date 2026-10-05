@@ -1,4 +1,4 @@
-﻿"""Coordinate specialist team cookbook — fixture and helper tests."""
+"""Coordinate specialist team cookbook — fixture and helper tests."""
 
 from __future__ import annotations
 

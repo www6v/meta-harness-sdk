@@ -1,4 +1,4 @@
-﻿"""E2E tests for sub-agent configuration and session thread APIs."""
+"""E2E tests for sub-agent configuration and session thread APIs."""
 
 from __future__ import annotations
 

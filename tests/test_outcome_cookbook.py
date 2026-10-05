@@ -1,4 +1,4 @@
-﻿"""Outcome grader cookbook tests — fixtures (CI) + live EV soak (opt-in)."""
+"""Outcome grader cookbook tests — fixtures (CI) + live EV soak (opt-in)."""
 
 from __future__ import annotations
 

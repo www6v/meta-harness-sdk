@@ -1,4 +1,4 @@
-﻿"""
+"""
 Sub-agent Examples — helpers for multi-agent coordinator setup and observability.
 
 Reference: open-managed-agents ``test/eval/runner.ts`` (subAgents → callable_agents)

@@ -1,4 +1,4 @@
-﻿"""E2E tests for CMA-aligned SkillsResource + FilesResource sync API."""
+"""E2E tests for CMA-aligned SkillsResource + FilesResource sync API."""
 
 from __future__ import annotations
 

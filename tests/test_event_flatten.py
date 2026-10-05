@@ -1,4 +1,4 @@
-﻿"""Unit tests for OMA session-event flattening (no live server)."""
+"""Unit tests for OMA session-event flattening (no live server)."""
 
 from __future__ import annotations
 

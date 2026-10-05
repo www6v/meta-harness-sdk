@@ -1,4 +1,4 @@
-﻿"""EX live soak runner — explore unfamiliar codebase cookbook."""
+"""EX live soak runner — explore unfamiliar codebase cookbook."""
 
 from __future__ import annotations
 

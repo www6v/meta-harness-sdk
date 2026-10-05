@@ -1,4 +1,4 @@
-﻿"""
+"""
 OMA Platform Python SDK.
 
 Usage:

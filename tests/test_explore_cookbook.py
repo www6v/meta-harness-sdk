@@ -1,4 +1,4 @@
-﻿"""Explore unfamiliar codebase cookbook tests."""
+"""Explore unfamiliar codebase cookbook tests."""
 
 from __future__ import annotations
 

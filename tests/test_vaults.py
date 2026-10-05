@@ -1,4 +1,4 @@
-﻿"""E2E tests for /v1/vaults — CRUD + credentials."""
+"""E2E tests for /v1/vaults — CRUD + credentials."""
 
 from __future__ import annotations
 

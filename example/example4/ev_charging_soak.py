@@ -1,4 +1,4 @@
-﻿"""OG5 live soak runner — EV fast-charging outcome grader cookbook."""
+"""OG5 live soak runner — EV fast-charging outcome grader cookbook."""
 
 from __future__ import annotations
 

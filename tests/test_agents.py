@@ -1,4 +1,4 @@
-﻿"""E2E tests for /v1/agents."""
+"""E2E tests for /v1/agents."""
 
 from __future__ import annotations
 

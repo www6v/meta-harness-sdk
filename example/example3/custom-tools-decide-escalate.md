@@ -1,4 +1,4 @@
-﻿# `decide()` / `escalate()` 自定义工具在 OMA 中的定义与流转
+# `decide()` / `escalate()` 自定义工具在 OMA 中的定义与流转
 
 本文说明 `gate_human_in_the_loop_main.py` 中 `decide()` 和 `escalate()` 在 OMA 系统里是如何定义、注册与执行的。
 

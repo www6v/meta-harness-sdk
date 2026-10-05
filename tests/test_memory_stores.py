@@ -1,4 +1,4 @@
-﻿"""E2E tests for /v1/memory_stores — CRUD + memories + memory_versions."""
+"""E2E tests for /v1/memory_stores — CRUD + memories + memory_versions."""
 
 from __future__ import annotations
 

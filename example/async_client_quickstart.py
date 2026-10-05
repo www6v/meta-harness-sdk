@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Minimal AsyncOMAClient quickstart (Anthropic AsyncAnthropic-aligned DX).
 
 Requires a running oma-platform::

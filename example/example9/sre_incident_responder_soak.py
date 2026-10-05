@@ -1,4 +1,4 @@
-﻿"""SRE live soak runner — incident responder cookbook."""
+"""SRE live soak runner — incident responder cookbook."""
 
 from __future__ import annotations
 

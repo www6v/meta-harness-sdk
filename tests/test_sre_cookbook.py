@@ -1,4 +1,4 @@
-﻿"""SRE incident responder cookbook tests."""
+"""SRE incident responder cookbook tests."""
 
 from __future__ import annotations
 

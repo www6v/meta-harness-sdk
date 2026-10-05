@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 DEPRECATED — see ../data_analyst_agent_main.py and ../v1/README.md.
 

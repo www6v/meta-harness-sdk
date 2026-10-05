@@ -1,4 +1,4 @@
-﻿"""Map httpx responses to Anthropic-style typed API errors."""
+"""Map httpx responses to Anthropic-style typed API errors."""
 
 from __future__ import annotations
 

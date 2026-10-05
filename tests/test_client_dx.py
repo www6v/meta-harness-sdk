@@ -1,4 +1,4 @@
-﻿"""Unit tests for OMAClient / AsyncOMAClient DX (no live platform required)."""
+"""Unit tests for OMAClient / AsyncOMAClient DX (no live platform required)."""
 
 from __future__ import annotations
 

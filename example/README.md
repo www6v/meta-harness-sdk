@@ -1,4 +1,4 @@
-﻿# OMA SDK cookbook parity examples
+# OMA SDK cookbook parity examples
 
 Thin launchers pick Python 3.11+ via `_run_with_python3.py`; main logic lives in
 `*_main.py`.

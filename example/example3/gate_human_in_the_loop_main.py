@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Gate: human-in-the-loop with custom tools — OMA Managed Agents cookbook example.
